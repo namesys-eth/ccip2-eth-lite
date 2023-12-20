@@ -1,22 +1,37 @@
 import Image from 'next/image'
+import React from 'react'
+import { useRouter } from 'next/router'
 import styles from './page.module.css'
-import BigSearch from '../components/BigSearch'
+import SearchBox from '../components/SearchBox'
+import { isMobile } from 'react-device-detect'
 import './index.css'
 
-// Triggers search of ENS domain
-const handleNameSearch = (query: string) => {
-}
-
 export default function Home() {
+  const router = useRouter()
+  const [ mobile, setMobile ] = React.useState(false)
+
+  // Triggers search of ENS domain
+  const handleNameSearch = (query: string) => {
+    router.push(`/profile?query=${query}`)
+  }
+
+  // INIT
+  React.useEffect(() => {
+    if (isMobile) {
+      setMobile(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <main className='flex-column'>
       <div style={{ marginTop: '7.5%' }}></div>
       <div className='flex-column'>
         <Image
-          className={'avatar'}
+          className={'logo'}
           src="/logo.png"
-          alt="namesys-avatar"
-          width={1000}
+          alt="namesys-logo"
+          width={1500}
           height={100}
           priority
         />
@@ -34,15 +49,14 @@ export default function Home() {
         style={{
           maxHeight: '520px',
           overflowY: 'auto',
-          marginTop: '50px',
           marginBottom: '50px',
         }}
       >
-        <BigSearch
+        <SearchBox
           onSearch={handleNameSearch}
         />
       </div>
-      <div className={styles.grid}>
+      <div className={styles.grid} style={{ marginTop: '50px' }}>
         <a
           href="https://pro.namesys.xyz"
           className={styles.card}
@@ -65,7 +79,7 @@ export default function Home() {
           <h2>
             DOCS <span className="material-icons micon">library_books</span>
           </h2>
-          <p>Learn About NameSys</p>
+          <p>Learn More</p>
         </a>
 
         <a
@@ -79,6 +93,33 @@ export default function Home() {
           </h2>
           <p>Source Codes</p>
         </a>
+      </div>
+      <div
+        className="flex-column"
+        style={{
+          paddingBottom: '10px',
+          marginTop: mobile ? '60px' : '100px'
+        }}
+      >
+        <span
+          style={{
+            color: 'skyblue',
+            fontWeight: '700',
+            fontSize: mobile ? '12px' : '14px',
+            paddingBottom: '5px'
+          }}
+        >
+          {'Funded By'}
+        </span>
+        <span
+          style={{
+            color: 'white',
+            fontWeight: '700',
+            fontSize: mobile ? '16px' : '20px'
+          }}
+        >
+          {'ENS DAO'}
+        </span>
       </div>
     </main>
   )

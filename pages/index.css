@@ -43,6 +43,19 @@ body {
   min-height: 100vh !important;
 }
 
+span {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.mono {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'SF Mono';
+  color: white;
+  cursor: copy;
+}
+
 .heading {
   background-image: url('/shadow.svg');
   background-size: 2.5%;
@@ -91,14 +104,25 @@ body {
   font-size: 24px;
 }
 
+.logo {
+  width: 7.5%;
+}
+
+.logo-2 {
+  width: 7.5%;
+}
+
 .avatar {
-  width: 10%;
+  width: 35%;
 }
 
 @media screen and (max-width: 700px) {
+  .logo {
+    width: 0%;
+  }
+
   .avatar {
-    width: 25%;
-    padding-top: 50px;
+    width: 35%;
   }
 }
 
@@ -719,15 +743,15 @@ h1 {
 }
 
 h2 {
-  font-family: "Spotnik" !important;
+  font-family: "Spotnik";
   font-size: 44px;
-  font-weight: 800
+  font-weight: 800;
 }
 
 h4 {
   font-family: "Spotnik";
   font-size: 26px;
-  font-weight: 800
+  font-weight: 800;
 }
 
 a:link {

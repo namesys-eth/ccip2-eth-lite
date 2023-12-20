@@ -1,10 +1,10 @@
 .main {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
   padding: 6rem;
   min-height: 100vh;
+  color: '#ff2600';
 }
 
 .description {
@@ -18,7 +18,7 @@
   font-family: var(--font-mono);
 }
 
-.description a {
+.description {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -44,6 +44,10 @@
   grid-template-columns: repeat(3, minmax(0, auto));
   max-width: 100%;
   width: var(--max-width);
+}
+
+.arrange {
+  margin: 10px 10px 0 20px;
 }
 
 .card {
@@ -209,8 +213,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .vercelLogo {
-    filter: invert(1);
+  .filter {
+    filter: invert(1) drop-shadow(0 0 0.3rem #d02b2bc7);
   }
 }
 

@@ -5,7 +5,7 @@ interface SearchBoxProps {
   onSearch: (query: string) => void
 }
 
-const BigSearch: React.FC<SearchBoxProps> = ({ onSearch }) => {
+const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
   const [query, setQuery] = useState("")
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,4 +88,4 @@ const BigSearch: React.FC<SearchBoxProps> = ({ onSearch }) => {
   );
 };
 
-export default BigSearch
+export default SearchBox
