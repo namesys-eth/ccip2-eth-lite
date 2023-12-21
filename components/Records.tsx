@@ -15,9 +15,10 @@ interface Record {
 
 interface RecordsContainerProps {
   records: Record[]
+  hue: string
 }
 
-const Records: React.FC<RecordsContainerProps> = ({ records }) => {
+const Records: React.FC<RecordsContainerProps> = ({ records, hue }) => {
   const [isLoading, setIsLoading] = React.useState('')
   const [inputValue, setInputValue] = React.useState('')
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
@@ -69,7 +70,7 @@ const Records: React.FC<RecordsContainerProps> = ({ records }) => {
                   width: '400px',
                   wordWrap: 'break-word',
                   textAlign: 'left',
-                  color: 'lightgreen',
+                  color: hue,
                   cursor: 'copy'
                 }}
               />

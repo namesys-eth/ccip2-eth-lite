@@ -9,6 +9,7 @@ import * as constants from '../utils/constants'
 import { isMobile } from 'react-device-detect'
 import Loading from '../components/LoadingColors'
 import Records from '../components/Records'
+import * as ensContent from '../utils/contenthash'
 import ResolverModal from '../components/ResolverModal'
 import { useWindowDimensions } from '../hooks/useWindowDimensions'
 import {
@@ -29,10 +30,10 @@ export default function Profile() {
   const [resolver, setResolver] = React.useState('') // Get ENS Resolver for query
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [found, setFound] = React.useState(false) // Set name registered or not status
+  const [color, setColor] = React.useState('lightgreen') // Set color
   const [message, setMessage] = React.useState('Domain Not Registered') // Set message to display
   const [justMigrated, setJustMigrated] = React.useState(false) // Set migrated flag
-
-  const [canImport, setCanImport] = React.useState(false) // Set import flag
+  const [canUse, setCanUse] = React.useState(false) // Set import flag
   const [resolverModal, setResolverModal] = React.useState(false) // Resolver modal
   const [records, setRecords] = React.useState(constants.records) // Set records 
   const [meta, setMeta] = React.useState(constants.meta) // Set ENS metadata
@@ -153,8 +154,32 @@ export default function Profile() {
                 }
               }
             } else {
-              if (!_Recordhash_ && !_Ownerhash_) {
-                setCanImport(true)
+              if (_Recordhash_ || _Ownerhash_) {
+                if (String(_Recordhash_).length > 2 && _Recordhash_ !== _Ownerhash_) {
+                  let _String: string = ''
+                  if (String(_Recordhash_).startsWith(constants.ipnsPrefix)) {
+                    let _this = ensContent.decodeContentHash(`0x${String(_Recordhash_)}`)
+                    _String = _this ? `ipns://${_this.decoded}` : ``
+                  } else {
+                    _String = ethers.toUtf8String(String(_Recordhash_))
+                  }
+                  if (_String.startsWith('https://') && _String === constants.defaultGateway) {
+                    setCanUse(true)
+                  }
+                } else if (String(_Recordhash_).length > 2 && _Recordhash_ === _Ownerhash_) {
+                  if (resolver === ccip2Contract) {
+                    let _String: string = ''
+                    if (String(_Ownerhash_).startsWith(constants.ipnsPrefix)) {
+                      let _this = ensContent.decodeContentHash(`0x${String(_Ownerhash_)}`)
+                      _String = _this ? `ipns://${_this.decoded}` : ``
+                    } else {
+                      _String = ethers.toUtf8String(String(_Ownerhash_))
+                    }
+                    if (_String.startsWith('https://') && _String === constants.defaultGateway) {
+                      setCanUse(true)
+                    }
+                  }
+                }
               }
             }
           }
@@ -187,7 +212,7 @@ export default function Profile() {
   // Handle recent migration & import
   React.useEffect(() => {
     if (justMigrated) {
-      setCanImport(true)
+      setCanUse(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [justMigrated])
@@ -438,12 +463,12 @@ export default function Profile() {
                     &nbsp;
                     <button
                       className="button-tiny"
-                      data-tooltip={meta.resolver === ccip2Contract ? (canImport ? `Resolver is migrated` : `Using NameSys with IPFS. Please use pro client`) : `Resolver is not migrated`}
+                      data-tooltip={meta.resolver === ccip2Contract ? (canUse ? `Resolver is migrated` : `Using NameSys with IPFS. Please use pro client`) : `Resolver is not migrated`}
                     >
                       <div
                         className="material-icons-round smoller"
                         style={{
-                          color: meta.resolver === ccip2Contract ? (canImport ? 'lightgreen' : 'orange') : 'orange',
+                          color: meta.resolver === ccip2Contract ? (canUse ? 'lightgreen' : 'orange') : 'orange',
                           fontSize: '22px',
                           margin: '1px 0 0 -5px'
                         }}
@@ -531,7 +556,7 @@ export default function Profile() {
               <div
                 className='flex-column'
                 style={{
-                  margin: '-7% 0 0 90.75%'
+                  margin: '-10% 0 0 90.75%'
                 }}
               >
                 <button
@@ -574,7 +599,7 @@ export default function Profile() {
               >
                 <button
                   className="button-tiny"
-                  data-tooltip={meta.resolver === ccip2Contract ? (canImport ? `Import ENS records` : `Please use pro client`) : `Resolver is not migrated`}
+                  data-tooltip={meta.resolver === ccip2Contract ? (canUse ? `Import ENS records` : `Please use pro client`) : `Resolver is not migrated`}
                   style={{
                     marginLeft: !mobile ? '0' : '-90%',
                   }}
@@ -582,7 +607,7 @@ export default function Profile() {
                   <div
                     className="material-icons-round smoller"
                     style={{
-                      color: meta.resolver === ccip2Contract ? (!canImport ? 'orange' : 'lightgreen') : 'orange',
+                      color: meta.resolver === ccip2Contract ? (!canUse ? 'orange' : 'lightgreen') : 'orange',
                       fontSize: '22px',
                       margin: '1px 0 0 -5px'
                     }}
@@ -598,7 +623,7 @@ export default function Profile() {
                   }}
                   onClick={() => setResolverModal(true)}
                   data-tooltip='Import ENS Records'
-                  disabled={!canImport}
+                  disabled={!canUse}
                 >
                   <span className="material-icons-round micon">download</span>
                 </button>
@@ -606,6 +631,7 @@ export default function Profile() {
               <div>
                 <Records
                   records={Object.values(records)}
+                  hue={!_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) ? 'lightgreen' : 'white'}
                 />
               </div>
             </div>
@@ -614,7 +640,7 @@ export default function Profile() {
             <ResolverModal
               onClose={() => setResolverModal(false)}
               show={resolverModal}
-              children={resolver}
+              children={resolver === ccip2Contract ? '' : resolver}
               handleModalData={function (data: string | undefined): void { }}
               handleTrigger={function (data: boolean): void { }}
             >

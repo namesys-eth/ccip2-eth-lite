@@ -57,21 +57,21 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
               className="material-icons"
               style={{
                 marginTop: '4px',
-                fontSize: '46px'
+                fontSize: '50px'
               }}
             >
               download
             </div>
             <div
               style={{
-                marginTop: '5px',
-                marginBottom: '10px',
-                fontSize: '18px'
+                marginTop: '10px',
+                marginBottom: '15px'
               }}
             >
               <span
                 style={{
-                  fontWeight: '700'
+                  fontWeight: '700',
+                  fontSize: '17px'
                 }}
               >
                 Import Records
@@ -83,7 +83,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
                 }}
                 onClick={() => {
                   setHelpModal(true),
-                    setHelp('<span><span style="color: cyan">Import records</span> from ENS Resolver</span>')
+                    setHelp('<span><span style="color: cyan">Import records</span> from ENS Resolver. Please enter <span style="color: cyan">Source Resolver Address</span></span>')
                 }}
                 data-tooltip={'Enlighten Me'}
               >
@@ -103,7 +103,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
           <input
             id='keyid'
             key='0'
-            placeholder={inputValue}
+            placeholder={inputValue || 'ENTER SOURCE RESOLVER'}
             type='text'
             value={inputValue}
             onChange={(e) => {
@@ -131,7 +131,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
             style={{
               height: '30px',
               width: '120px',
-              marginTop: '17px',
+              marginTop: '23px',
               fontSize: '15px'
             }}
             onClick={handleSubmit}
