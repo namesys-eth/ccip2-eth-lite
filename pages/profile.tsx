@@ -3,10 +3,13 @@ import React from 'react'
 import styles from './page.module.css'
 import './index.css'
 import { useRouter } from 'next/router'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { ethers } from 'ethers'
 import * as constants from '../utils/constants'
 import { isMobile } from 'react-device-detect'
+import Loading from '../components/LoadingColors'
 import Records from '../components/Records'
+import ResolverModal from '../components/ResolverModal'
 import { useWindowDimensions } from '../hooks/useWindowDimensions'
 import {
   useAccount,
@@ -27,12 +30,16 @@ export default function Profile() {
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [found, setFound] = React.useState(false) // Set name registered or not status
   const [message, setMessage] = React.useState('Domain Not Registered') // Set message to display
-  const [justMigrated, setJustMigrated] = React.useState(false) // Set message to display
+  const [justMigrated, setJustMigrated] = React.useState(false) // Set migrated flag
+
+  const [canImport, setCanImport] = React.useState(false) // Set import flag
+  const [resolverModal, setResolverModal] = React.useState(false) // Resolver modal
   const [records, setRecords] = React.useState(constants.records) // Set records 
   const [meta, setMeta] = React.useState(constants.meta) // Set ENS metadata
   const [tokenIDLegacy, setTokenIDLegacy] = React.useState('') // Set Token ID of unwrapped/legacy name
   const [namehashLegacy, setNamehashLegacy] = React.useState('') // Legacy Namehash of ENS Domain
   const [tokenIDWrapper, setTokenIDWrapper] = React.useState('') // Set Token ID of wrapped name
+  const [loading, setLoading] = React.useState(true) // Loading Records marker
 
   // Variables
   const chain = process.env.NEXT_PUBLIC_NETWORK === 'mainnet' ? '1' : '5'
@@ -69,6 +76,9 @@ export default function Profile() {
     if (isMobile || (width && width < 1300)) {
       setMobile(true)
     }
+    setTimeout(() => {
+      setLoading(false)
+    }, 2000)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height])
 
@@ -120,15 +130,67 @@ export default function Profile() {
         const _addr = _resolver ? await getAddr(ENS, records) : ''
         const _url = _resolver ? await getText(_resolver, 'url', records) : ''
         const _description = _resolver ? await getText(_resolver, 'description', records) : ''
-        const _x_com = _resolver ? await getText(_resolver, 'com.twitter', records) : ''
-        const _discord_com = _resolver ? await getText(_resolver, 'com.discord', records) : ''
-        const _github_com = _resolver ? await getText(_resolver, 'com.github', records) : ''
-        const _ensRecords = constants.getENSRecords(resolver, ENS)
+        const _twitter = _resolver ? await getText(_resolver, 'com.twitter', records) : ''
+        const _discord = _resolver ? await getText(_resolver, 'com.discord', records) : ''
+        const _github = _resolver ? await getText(_resolver, 'com.github', records) : ''
+        const _getENSRecords = async () => {
+          if (resolver && ENS) {
+            if (resolver !== ccip2Contract) {
+              if (constants.ensContracts.includes(resolver)) {
+                let _records = { ...records }
+                let _ensRecords = await constants.getENSRecords(resolver, ENS)
+                if (_ensRecords) {
+                  _records.addr.ens = _ensRecords.addr
+                  _records.avatar.ens = _ensRecords.avatar
+                  _records.contenthash.ens = _ensRecords.contenthash
+                  _records.url.ens = _ensRecords.url
+                  _records.description.ens = _ensRecords.description
+                  _records['com.github'].ens = _ensRecords.github
+                  _records['com.twitter'].ens = _ensRecords.twitter
+                  _records['com.discord'].ens = _ensRecords.discord
+                  setRecords(_records)
+                  console.log(_records)
+                }
+              }
+            } else {
+              if (!_Recordhash_ && !_Ownerhash_) {
+                setCanImport(true)
+              }
+            }
+          }
+        }
+        _getENSRecords()
       }
     }
     _getRecords()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolver, ENS])
+
+  // Sets new ENS Resolver
+  const {
+    data: response1of1,
+    write: migrate,
+    isLoading: isMigrateLoading,
+    isSuccess: isMigrateSuccess,
+    isError: isMigrateError
+  } = useContractWrite({
+    address: `0x${!meta.wrapped ? constants.ensConfig[0].addressOrName.slice(2) : constants.ensConfig[chain === '1' ? 7 : 3].addressOrName.slice(2)}`,
+    abi: !meta.wrapped ? constants.ensConfig[0].contractInterface : constants.ensConfig[chain === '1' ? 7 : 3].contractInterface,
+    functionName: 'setResolver',
+    args: [ethers.namehash(ENS), ccip2Contract]
+  })
+  // Wagmi hook for awaiting transaction processing
+  const { isSuccess: txSuccess, isError: txError, isLoading: txLoading } = useWaitForTransaction({
+    hash: response1of1?.hash,
+  })
+
+  // Handle recent migration & import
+  React.useEffect(() => {
+    if (justMigrated) {
+      setCanImport(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [justMigrated])
 
   // Get Resolver for ENS domain
   async function getResolver(_ENS: string) {
@@ -274,7 +336,7 @@ export default function Profile() {
     address: `0x${ccip2Config.addressOrName.slice(2)}`,
     abi: ccip2Config.contractInterface,
     functionName: 'getRecordhash',
-    args: [ethers.zeroPadValue(getManager(), 32).toLowerCase()]
+    args: [ethers.zeroPadValue(getManager(), 32)]
   })
   // Read Recordhash from CCIP2 Resolver
   const { data: _Recordhash_ } = useContractRead({
@@ -289,7 +351,7 @@ export default function Profile() {
     if (_OwnerLegacy_ && _OwnerLegacy_ !== constants.zeroAddress) {
       let _meta = { ...meta }
       _meta.owner = String(_OwnerLegacy_)
-      if (String(_OwnerLegacy_).toLowerCase() !== constants.ensContracts[7].toLowerCase()) {
+      if (String(_OwnerLegacy_) !== constants.ensContracts[7]) {
         if (_ManagerLegacy_ && _ManagerLegacy_ !== constants.zeroAddress) {
           _meta.manager = String(_ManagerLegacy_)
         }
@@ -311,210 +373,320 @@ export default function Profile() {
 
   return (
     <main className='flex-column'>
-      <div style={{ marginTop: '1.5%' }}></div>
-      <div className='flex-column' style={{ opacity: 0.35 }}>
-        <Image
-          className={'logo-2'}
-          src="/logo.png"
-          alt="namesys-logo"
-          width={500}
-          height={100}
-          priority
-        />
-        <div className='flex-column' style={{ marginTop: '-4%' }}>
-          <h4 style={{ color: '#ff2600' }}>
-            NameSys
-          </h4>
-          <h6 style={{ color: '#fc4e14', marginTop: '-25px' }}>
-            Lite
-          </h6>
-        </div>
-      </div>
-      <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 0' }}>
-        <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 20px' }}>
-          <img
-            src={records.avatar.source || '/profile.png'}
-            onError={(event) => {
-              (event.target as any).onerror = null;
-              (event.target as any).src = '/profile.png';
-            }}
-            width={'110px'}
-            style={{ margin: '0 15px -3px 0' }}
+      {loading && (
+        <div style={{ marginTop: '350px' }}>
+          <Loading
+            height={50}
+            width={50}
           />
-          <div
-            className={!mobile ? 'flex-row' : 'flex-column'}
-            style={{
-              alignItems: 'flex-start',
-              margin: mobile ? '5px 0 0 0' : '0 0 0 0',
-            }}
-          >
-            <div
-              className={!mobile ? 'flex-column-sans-align' : 'flex-column'}
-              style={{
-                margin: !mobile ? '-8.75% 0 0 -46%' : '0 0 0 0',
-                color: '#ff2600'
-              }}
-            >
-              <div className='flex-row-sans-justify'>
-                <span>{'Migrated'}</span>
-                &nbsp;
-                <span
-                  className='material-icons'
+        </div>
+      )}
+      {!loading && (
+        <>
+          <div style={{ marginTop: '20px', marginRight: '-61.5%' }}>
+            <div>
+              <ConnectButton
+                label='wallet'
+              />
+            </div>
+          </div>
+          <div className='flex-column' style={{ opacity: 0.35, marginTop: '-2%' }}>
+            <Image
+              className={'logo-2'}
+              src="/logo.png"
+              alt="namesys-logo"
+              width={500}
+              height={100}
+              priority
+            />
+            <div className='flex-column' style={{ marginTop: '-4%' }}>
+              <h4 style={{ color: '#ff2600' }}>
+                NameSys
+              </h4>
+              <h6 style={{ color: '#fc4e14', marginTop: '-25px' }}>
+                Lite
+              </h6>
+            </div>
+          </div>
+          <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 0' }}>
+            <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 20px' }}>
+              <img
+                src={records.avatar.source || '/profile.png'}
+                onError={(event) => {
+                  (event.target as any).onerror = null;
+                  (event.target as any).src = '/profile.png';
+                }}
+                width={'120px'}
+                style={{ margin: '0 15px -3px 0' }}
+              />
+              <div
+                className={!mobile ? 'flex-row' : 'flex-column'}
+                style={{
+                  alignItems: 'flex-start',
+                  margin: mobile ? '5px 0 0 0' : '0 0 0 0',
+                }}
+              >
+                <div
+                  className={!mobile ? 'flex-column-sans-align' : 'flex-column'}
                   style={{
-                    color: '#00ff40',
-                    fontSize: '20px'
+                    margin: !mobile ? '-9.375% 0 0 -44%' : '0 0 0 0',
+                    color: '#ff2600'
                   }}
                 >
-                  {meta.resolver === ccip2Contract ? 'done' : 'close'}
-                </span>
+                  <div className='flex-row-sans-justify'>
+                    <span>{'Migrated'}</span>
+                    &nbsp;
+                    <button
+                      className="button-tiny"
+                      data-tooltip={meta.resolver === ccip2Contract ? (canImport ? `Resolver is migrated` : `Using NameSys with IPFS. Please use pro client`) : `Resolver is not migrated`}
+                    >
+                      <div
+                        className="material-icons-round smoller"
+                        style={{
+                          color: meta.resolver === ccip2Contract ? (canImport ? 'lightgreen' : 'orange') : 'orange',
+                          fontSize: '22px',
+                          margin: '1px 0 0 -5px'
+                        }}
+                      >
+                        {meta.resolver === ccip2Contract ? 'done' : 'close'}
+                      </div>
+                    </button>
+                  </div>
+                  <div>
+                    <span>{'Resolver'}</span>
+                    &nbsp;
+                    <span
+                      className='mono'
+                      id="metaResolver"
+                      onClick={() => constants.copyToClipboard(meta.resolver, "metaResolver", "this")}
+                    >
+                      {mobile ? constants.truncateHexString(meta.resolver) : meta.resolver}
+                    </span>
+                  </div>
+                  <div>
+                    <span>{'Owner'}</span>
+                    &nbsp;
+                    <span
+                      className='mono'
+                      id="metaOwner"
+                      onClick={() => constants.copyToClipboard(meta.owner, "metaOwner", "this")}
+                      color=''
+                    >
+                      {mobile ? constants.truncateHexString(meta.owner) : meta.owner}
+                    </span>
+                  </div>
+                  <div>
+                    <span>{'Manager'}</span>
+                    &nbsp;
+                    <span
+                      className='mono'
+                      id="metaManager"
+                      onClick={() => constants.copyToClipboard(meta.manager, "metaManager", "this")}
+                    >
+                      {mobile ? constants.truncateHexString(meta.manager) : meta.manager}
+                    </span>
+                  </div>
+                  <div className='flex-row-sans-justify'>
+                    <span>{'Wrapped'}</span>
+                    &nbsp;
+                    <span
+                      className='material-icons'
+                      style={{
+                        color: 'white',
+                        fontSize: '21px'
+                      }}
+                    >
+                      {meta.wrapped ? 'done' : 'close'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <span>{'Resolver'}</span>
-                &nbsp;
+            </div>
+            <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'}>
+              <h2
+                style={{
+                  color: '#ff2600',
+                  fontFamily: 'SF Mono',
+                  fontSize: '36px',
+                  paddingLeft: '20px'
+                }}
+              >
+                <img
+                  src='ens.png'
+                  width={'25px'}
+                  style={{ margin: '0 15px -3px 0' }}
+                />
+                {ENS ? ENS.slice(0, -4) : ''}
                 <span
-                  className='mono'
-                  id="metaResolver"
-                  onClick={() => constants.copyToClipboard(meta.resolver, "metaResolver", "this")}
-                >
-                  {mobile ? constants.truncateHexString(meta.resolver) : meta.resolver}
-                </span>
-              </div>
-              <div>
-                <span>{'Owner'}</span>
-                &nbsp;
-                <span
-                  className='mono'
-                  id="metaOwner"
-                  onClick={() => constants.copyToClipboard(meta.owner, "metaOwner", "this")}
-                  color=''
-                >
-                  {mobile ? constants.truncateHexString(meta.owner) : meta.owner}
-                </span>
-              </div>
-              <div>
-                <span>{'Manager'}</span>
-                &nbsp;
-                <span
-                  className='mono'
-                  id="metaManager"
-                  onClick={() => constants.copyToClipboard(meta.manager, "metaManager", "this")}
-                >
-                  {mobile ? constants.truncateHexString(meta.manager) : meta.manager}
-                </span>
-              </div>
-              <div className='flex-row-sans-justify'>
-                <span>{'Wrapped'}</span>
-                &nbsp;
-                <span
-                  className='material-icons'
                   style={{
-                    color: '#00ff40',
-                    fontSize: '20px'
+                    opacity: '0.50',
+                    fontSize: '26px',
+                    color: 'white'
                   }}
                 >
-                  {meta.wrapped ? 'done' : 'close'}
+                  {'.eth'}
                 </span>
+              </h2>
+              {/* MIGRATE */}
+              <div
+                className='flex-column'
+                style={{
+                  margin: '-7% 0 0 90.75%'
+                }}
+              >
+                <button
+                  className="button-tiny"
+                  data-tooltip={meta.resolver === ccip2Contract ? `Resolver is migrated` : `Resolver is not migrated`}
+                  style={{
+                    marginLeft: !mobile ? '0' : '-90%',
+                  }}
+                >
+                  <div
+                    className="material-icons-round smoller"
+                    style={{
+                      color: meta.resolver === ccip2Contract ? 'lightgreen' : 'orange',
+                      fontSize: '22px',
+                      margin: '1px 0 0 -5px'
+                    }}
+                  >
+                    {'info_outline'}
+                  </div>
+                </button>
+                <button
+                  className={justMigrated ? 'button blink' : 'button'}
+                  style={{
+                    width: '50px',
+                    margin: !mobile ? '-7% 0 0 50%' : '-3% 0 0 0',
+                  }}
+                  onClick={() => migrate()}
+                  data-tooltip='Migrate Resolver'
+                  disabled={!_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) || meta.resolver === ccip2Contract}
+                >
+                  <span className="material-icons-round micon">shopping_cart</span>
+                </button>
+              </div>
+              {/* IMPORT */}
+              <div
+                className='flex-column'
+                style={{
+                  margin: '0 0 0 90.75%'
+                }}
+              >
+                <button
+                  className="button-tiny"
+                  data-tooltip={meta.resolver === ccip2Contract ? (canImport ? `Import ENS records` : `Please use pro client`) : `Resolver is not migrated`}
+                  style={{
+                    marginLeft: !mobile ? '0' : '-90%',
+                  }}
+                >
+                  <div
+                    className="material-icons-round smoller"
+                    style={{
+                      color: meta.resolver === ccip2Contract ? (!canImport ? 'orange' : 'lightgreen') : 'orange',
+                      fontSize: '22px',
+                      margin: '1px 0 0 -5px'
+                    }}
+                  >
+                    {'info_outline'}
+                  </div>
+                </button>
+                <button
+                  className={justMigrated ? 'button blink' : 'button'}
+                  style={{
+                    width: '50px',
+                    margin: !mobile ? '-5% 0 0 50%' : '-3% 0 0 0',
+                  }}
+                  onClick={() => setResolverModal(true)}
+                  data-tooltip='Import ENS Records'
+                  disabled={!canImport}
+                >
+                  <span className="material-icons-round micon">download</span>
+                </button>
+              </div>
+              <div>
+                <Records
+                  records={Object.values(records)}
+                />
               </div>
             </div>
           </div>
-        </div>
-        <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'}>
-          <h2
+          <div id="modal">
+            <ResolverModal
+              onClose={() => setResolverModal(false)}
+              show={resolverModal}
+              children={resolver}
+              handleModalData={function (data: string | undefined): void { }}
+              handleTrigger={function (data: boolean): void { }}
+            >
+            </ResolverModal>
+          </div>
+          <div className={styles.grid} style={{ margin: '120px 0 0 0' }}>
+            <a
+              href="https://pro.namesys.xyz"
+              className={styles.card}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#ff2600' }}
+            >
+              <h2>
+                NAMESYS PRO <span className="material-icons micon">settings</span>
+              </h2>
+              <p>NameSys Pro Client</p>
+            </a>
+
+            <a
+              href="https://namesys.xyz/readme/readme.htm?src=https://namesys-eth.github.io/ccip2-eth-resources/GUIDE.md"
+              className={styles.card}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <h2>
+                DOCS <span className="material-icons micon">library_books</span>
+              </h2>
+              <p>Learn More</p>
+            </a>
+
+            <a
+              href="https://github.com/namesys-eth"
+              className={styles.card}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <h2>
+                CODE <span className="material-icons micon">developer_mode</span>
+              </h2>
+              <p>Source Codes</p>
+            </a>
+          </div>
+          <div
+            className="flex-column"
             style={{
-              color: '#ff2600',
-              fontFamily: 'SF Mono',
-              fontSize: '36px',
-              paddingLeft: '20px'
+              paddingTop: '30px'
             }}
           >
-            <img
-              src='ens.png'
-              width={'25px'}
-              style={{ margin: '0 15px -3px 0' }}
-            />
-            {ENS ? ENS.slice(0, -4) : ''}
             <span
               style={{
-                opacity: '0.50',
-                fontSize: '26px',
-                color: 'white'
+                color: 'skyblue',
+                fontWeight: '700',
+                fontSize: mobile ? '12px' : '14px',
+                paddingBottom: '5px'
               }}
             >
-              {'.eth'}
+              {'Funded By'}
             </span>
-          </h2>
-          <div>
-            <Records
-              records={Object.values(records)}
-            />
+            <span
+              style={{
+                color: 'white',
+                fontWeight: '700',
+                fontSize: mobile ? '16px' : '20px'
+              }}
+            >
+              {'ENS DAO'}
+            </span>
           </div>
-        </div>
-      </div>
-      <div className={styles.grid} style={{ margin: '120px 0 0 0' }}>
-        <a
-          href="https://pro.namesys.xyz"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: '#ff2600' }}
-        >
-          <h2>
-            NAMESYS PRO <span className="material-icons micon">settings</span>
-          </h2>
-          <p>NameSys Pro Client</p>
-        </a>
-
-        <a
-          href="https://namesys.xyz/readme/readme.htm?src=https://namesys-eth.github.io/ccip2-eth-resources/GUIDE.md"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            DOCS <span className="material-icons micon">library_books</span>
-          </h2>
-          <p>Learn More</p>
-        </a>
-
-        <a
-          href="https://github.com/namesys-eth"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            CODE <span className="material-icons micon">developer_mode</span>
-          </h2>
-          <p>Source Codes</p>
-        </a>
-      </div>
-      <div
-        className="flex-column"
-        style={{
-          paddingTop: '30px'
-        }}
-      >
-        <span
-          style={{
-            color: 'skyblue',
-            fontWeight: '700',
-            fontSize: mobile ? '12px' : '14px',
-            paddingBottom: '5px'
-          }}
-        >
-          {'Funded By'}
-        </span>
-        <span
-          style={{
-            color: 'white',
-            fontWeight: '700',
-            fontSize: mobile ? '16px' : '20px'
-          }}
-        >
-          {'ENS DAO'}
-        </span>
-      </div>
-      <div id='this' style={{ marginTop: '2.5%' }}></div>
+          <div id='this' style={{ marginTop: '2.5%' }}></div>
+        </>
+      )}
     </main>
   )
 }

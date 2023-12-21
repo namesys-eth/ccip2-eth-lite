@@ -698,23 +698,20 @@ input:disabled {
   font-family: "Spotnik";
   font-size: 15px;
   font-weight: 800;
-  height: 40px;
   padding: 1px 1px;
   border-radius: 6px;
   align-items: left;
   color: white;
   transition: all ease 100ms;
-  margin-right: 10px;
 }
 
 .button-tiny::after {
   content: attr(data-tooltip);
   background-color: black;
   color: white;
-  padding: 4px;
   border-radius: 2px;
   position: absolute;
-  top: -15%;
+  top: -65%;
   left: 110%;
   max-width: 250px;
   transform: translateX(-50%);
@@ -1572,7 +1569,7 @@ button:not(:disabled),
 }
 
 .blink {
-  animation: blinker 1s linear infinite;
+  animation: blinker 3s linear infinite;
 }
 
 @keyframes blinker {

@@ -8,7 +8,7 @@ import './index.css'
 
 export default function Home() {
   const router = useRouter()
-  const [ mobile, setMobile ] = React.useState(false)
+  const [mobile, setMobile] = React.useState(false)
 
   // Triggers search of ENS domain
   const handleNameSearch = (query: string) => {

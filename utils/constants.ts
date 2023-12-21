@@ -44,9 +44,9 @@ const atomRegex = /^cosmos1[a-zA-Z0-9]{38}$/
 // ENS Domain's Metadata
 export const meta = {
   regOn: '',
-  resolver: '',
-  owner: '',
-  manager: '',
+  resolver: zeroAddress,
+  owner: zeroAddress,
+  manager: zeroAddress,
   wrapped: false
 }
 
@@ -257,7 +257,7 @@ export function copyToClipboard(value: string, spanId: string, divId: string) {
 }
 
 // Get ENS Records
-export function getENSRecords(resolver: string, ENS: string) {
+export async function getENSRecords(resolver: string, ENS: string) {
   let _ensRecords = {
     contenthash: '',
     avatar: '',
@@ -268,20 +268,109 @@ export function getENSRecords(resolver: string, ENS: string) {
     discord: '',
     github: ''
   }
-  const _getENSRecords = async () => {
-    const contract = new web3.eth.Contract(
-      ensConfig[ensContracts.indexOf(resolver)].contractInterface as AbiItem[],
-      ensConfig[ensContracts.indexOf(resolver)].addressOrName
-    )
-    _ensRecords.contenthash = await contract.methods.getContenthash(ethers.namehash(ENS))
-    _ensRecords.avatar = await contract.methods.getText(ethers.namehash(ENS), 'avatar')
-    _ensRecords.addr = await contract.methods.getAddr(ethers.namehash(ENS))
-    _ensRecords.url = await contract.methods.getText(ethers.namehash(ENS), 'url')
-    _ensRecords.description = await contract.methods.getText(ethers.namehash(ENS), 'url')
-    _ensRecords.twitter = await contract.methods.getText(ethers.namehash(ENS), 'com.twitter')
-    _ensRecords.discord = await contract.methods.getText(ethers.namehash(ENS), 'com.discord')
-    _ensRecords.github = await contract.methods.getText(ethers.namehash(ENS), 'com.github')
+  try {
+    if (ensContracts.includes(resolver)) {
+      const _getENSRecords = async () => {
+        const contract = new web3.eth.Contract(
+          ensConfig[ensContracts.indexOf(resolver)].contractInterface as AbiItem[],
+          ensConfig[ensContracts.indexOf(resolver)].addressOrName
+        )
+        _ensRecords.contenthash = await contract.methods.contenthash(ethers.namehash(ENS))
+        _ensRecords.avatar = await contract.methods.text(ethers.namehash(ENS), 'avatar')
+        _ensRecords.addr = await contract.methods.addr(ethers.namehash(ENS))
+        _ensRecords.url = await contract.methods.text(ethers.namehash(ENS), 'url')
+        _ensRecords.description = await contract.methods.text(ethers.namehash(ENS), 'url')
+        _ensRecords.twitter = await contract.methods.text(ethers.namehash(ENS), 'com.twitter')
+        _ensRecords.discord = await contract.methods.text(ethers.namehash(ENS), 'com.discord')
+        _ensRecords.github = await contract.methods.text(ethers.namehash(ENS), 'com.github')
+        return _ensRecords
+      }
+      _getENSRecords()
+    } else {
+      return _ensRecords
+    }
+  } catch (error) {
+    console.error(error)
     return _ensRecords
   }
-  _getENSRecords()
+}
+
+// Check if value is a valid Name
+export function isName(value: string) {
+  return value.endsWith('.eth') && value.length <= 32 + 4
+}
+// Check if value is a valid Addr
+export function isAddr(value: string) {
+  return value.startsWith('0x') && value.length === 42 && hexRegex.test(value.split('0x')[1])
+}
+// Check if value is a valid Avatar URL
+export function isAvatar(value: string) {
+  return urlRegex.test(value) || value.startsWith('ipfs://') || value.startsWith('eip155:')
+}
+// Check if value is a valid Pubkey
+export function isPubkey(value: string) {
+  return value.length > 0
+}
+// Check if value is a valid URL
+export function isEmail(value: string) {
+  return emailRegex.test(value)
+}
+// Check if value is a valid Github username
+export function isGithub(value: string) {
+  return githubRegex.test(value)
+}
+// Check if value is a valid URL
+export function isUrl(value: string) {
+  return urlRegex.test(value)
+}
+// Check if value is a valid Twitter username
+export function isTwitter(value: string) {
+  return twitterRegex.test(value)
+}
+// Check if value is a valid Discord username
+export function isDiscord(value: string) {
+  return discordRegex.test(value)
+}
+// Check if value is a valid Farcaster username
+export function isFarcaster(value: string) {
+  return farcasterRegex.test(value)
+}
+// Check if value is a valid Nostr username
+export function isNostr(value: string) {
+  return btcRegex.test(value) || emailRegex.test(value)
+}
+// Check if value is a valid BTC address
+export function isBTC(value: string) {
+  return btcRegex.test(value)
+}
+// Check if value is a valid LTC address
+export function isLTC(value: string) {
+  return ltcRegex.test(value)
+}
+// Check if value is a valid DOGE address
+export function isDOGE(value: string) {
+  return dogeRegex.test(value)
+}
+// Check if value is a valid SOL address
+export function isSOL(value: string) {
+  return solRegex.test(value)
+}
+// Check if value is a valid ATOM address
+export function isATOM(value: string) {
+  return atomRegex.test(value)
+}
+// Check if value is a valid Zonehash
+export function isZonehash(value: string) {
+  return zonehashRegex.test(value)
+}
+// Check if value is a valid Contenthash
+export function isContenthash(value: string) {
+  const prefixIPFS = value.substring(0, 7)
+  const prefixOnion = value.substring(0, 8)
+  return (
+    (prefixIPFS === 'ipns://' && ipnsRegex.test(value.substring(7,))) || // Check IPNS
+    (prefixIPFS === 'ipfs://' && ipfsRegexCID0.test(value.substring(7,))) || // Check IPFS CIDv0
+    (prefixIPFS === 'ipfs://' && ipfsRegexCID1.test(value.substring(7,))) || // Check IPFS CIDv1
+    (prefixOnion === 'onion://' && onionRegex.test(value.substring(8,))) // Check Onion v2 & v3
+  )
 }
