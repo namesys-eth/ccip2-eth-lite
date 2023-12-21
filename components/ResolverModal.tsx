@@ -103,7 +103,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
           <input
             id='keyid'
             key='0'
-            placeholder={inputValue || 'ENTER SOURCE RESOLVER'}
+            placeholder={inputValue || 'enter source resolver'}
             type='text'
             value={inputValue}
             onChange={(e) => {
@@ -122,7 +122,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
               width: '100%',
               wordWrap: 'break-word',
               textAlign: 'left',
-              color: 'rgb(255, 255, 255, 0.6)',
+              color: 'rgb(255, 255, 255, 1)',
               cursor: 'copy'
             }}
           />

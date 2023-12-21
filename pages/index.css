@@ -185,8 +185,12 @@ input[type="text"] {
   border: none;
 }
 
-input:disabled {
-  color: gray;
+input[type="text"]:disabled {
+  color: rgb(255, 255, 255);
+}
+
+input[type="text"]::placeholder {
+  color: rgba(200, 210, 200, 0.9);
 }
 
 .inputextra::placeholder {
@@ -1482,7 +1486,7 @@ button:not(:disabled),
   vertical-align: middle;
   cursor: wait;
   background-color: currentColor;
-  opacity: 0.5;
+  opacity: 1;
 }
 
 @-webkit-keyframes placeholder-glow {

@@ -15,6 +15,11 @@ import { AbiItem } from 'web3-utils'
 import * as ensContent from '../utils/contenthash'
 import axios from 'axios'
 
+export interface MainBodyState {
+  modalData: string | undefined
+  trigger: boolean
+}
+
 export const signedRecord = 'function signedRecord(address recordSigner, bytes memory recordSignature, bytes memory approvedSignature, bytes memory result)'
 export const signedRedirect = 'function signedRedirect(address recordSigner, bytes memory recordSignature, bytes memory approvedSignature, bytes memory redirect)'
 export const zeroAddress = '0x' + '0'.repeat(40)
@@ -41,13 +46,26 @@ const dogeRegex = /^D[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{24,33}$/
 const solRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
 const atomRegex = /^cosmos1[a-zA-Z0-9]{38}$/
 
+// ENS Records
+export const ensRecords = {
+  contenthash: '',
+  avatar: '',
+  addr: '',
+  url: '',
+  description: '',
+  twitter: '',
+  discord: '',
+  github: ''
+}
+
 // ENS Domain's Metadata
 export const meta = {
   regOn: '',
   resolver: zeroAddress,
   owner: zeroAddress,
   manager: zeroAddress,
-  wrapped: false
+  wrapped: false,
+  chainId: 1
 }
 
 let network = process.env.NEXT_PUBLIC_NETWORK
@@ -146,7 +164,8 @@ export const records = {
     path: 'contenthash',
     source: '',
     loading: true,
-    ens: ''
+    ens: '',
+    new: ''
   },
   "addr": {
     id: 'Address',
@@ -155,7 +174,8 @@ export const records = {
     path: 'address/60',
     source: '',
     loading: true,
-    ens: ''
+    ens: '',
+    new: ''
   },
   "avatar": {
     id: 'Avatar',
@@ -164,7 +184,8 @@ export const records = {
     path: 'text/avatar',
     source: '',
     loading: true,
-    ens: ''
+    ens: '',
+    new: ''
   },
   "url": {
     id: 'URL',
@@ -173,7 +194,8 @@ export const records = {
     path: 'text/url',
     source: '',
     loading: true,
-    ens: ''
+    ens: '',
+    new: ''
   },
   "description": {
     id: 'Description',
@@ -182,7 +204,8 @@ export const records = {
     path: 'text/description',
     source: '',
     loading: true,
-    ens: ''
+    ens: '',
+    new: ''
   },
   "com.twitter": {
     id: 'X | Twitter',
@@ -191,7 +214,8 @@ export const records = {
     path: 'text/com.twitter',
     source: '',
     loading: true,
-    ens: ''
+    ens: '',
+    new: ''
   },
   "com.discord": {
     id: 'Discord',
@@ -200,7 +224,8 @@ export const records = {
     path: 'text/com.discord',
     source: '',
     loading: true,
-    ens: ''
+    ens: '',
+    new: ''
   },
   "com.github": {
     id: 'Github',
@@ -209,7 +234,8 @@ export const records = {
     path: 'text/com.github',
     source: '',
     loading: true,
-    ens: ''
+    ens: '',
+    new: ''
   }
 }
 
@@ -242,9 +268,9 @@ export function copyToClipboard(value: string, spanId: string, divId: string) {
   const spanElement = document.getElementById(spanId)
   const divElement = document.getElementById(divId)
   if (spanElement && divElement) {
-    if (spanElement.style.color === 'white') spanElement.style.color = 'lightgreen'
+    if (spanElement.style.color === 'lightgreen') spanElement.style.color = 'white'
     else spanElement.style.color = 'white'
-    if (divElement.style.color === 'white') divElement.style.color = 'lightgreen'
+    if (divElement.style.color === 'lightgreen') divElement.style.color = 'white'
     else divElement.style.color = 'white'
     // Reset the color after a delay (e.g., 2 seconds)
     setTimeout(() => {
@@ -258,16 +284,7 @@ export function copyToClipboard(value: string, spanId: string, divId: string) {
 
 // Get ENS Records
 export async function getENSRecords(resolver: string, ENS: string) {
-  let _ensRecords = {
-    contenthash: '',
-    avatar: '',
-    addr: '',
-    url: '',
-    description: '',
-    twitter: '',
-    discord: '',
-    github: ''
-  }
+  let _ensRecords = { ...ensRecords }
   try {
     if (ensContracts.includes(resolver)) {
       const _getENSRecords = async () => {

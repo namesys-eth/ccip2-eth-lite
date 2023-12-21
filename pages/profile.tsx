@@ -41,6 +41,10 @@ export default function Profile() {
   const [namehashLegacy, setNamehashLegacy] = React.useState('') // Legacy Namehash of ENS Domain
   const [tokenIDWrapper, setTokenIDWrapper] = React.useState('') // Set Token ID of wrapped name
   const [loading, setLoading] = React.useState(true) // Loading Records marker
+  const [recordsModalState, setRecordsModalState] = React.useState<constants.MainBodyState>({
+    modalData: undefined,
+    trigger: false
+  }) // Gateway modal state
 
   // Variables
   const chain = process.env.NEXT_PUBLIC_NETWORK === 'mainnet' ? '1' : '5'
@@ -57,6 +61,15 @@ export default function Profile() {
   const origin = `eth:${_Wallet_ || constants.zeroAddress}`
   const PORT = process.env.NEXT_PUBLIC_PORT
   const SERVER = process.env.NEXT_PUBLIC_SERVER
+
+  // Handle Gateway modal data return
+  const handleRecordsModalData = (data: string | undefined) => {
+    setRecordsModalState(prevState => ({ ...prevState, modalData: data }))
+  }
+  // Handle Gateway modal trigger
+  const handleRecordsTrigger = (trigger: boolean) => {
+    setRecordsModalState(prevState => ({ ...prevState, trigger: trigger }))
+  }
 
   // FUNCTIONS
   // Returns Owner of Wrapped or Manager of Legacy ENS Domain
@@ -630,6 +643,9 @@ export default function Profile() {
               </div>
               <div>
                 <Records
+                  meta={meta}
+                  handleTrigger={handleRecordsTrigger}
+                  handleModalData={handleRecordsModalData}
                   records={Object.values(records)}
                   hue={!_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) ? 'lightgreen' : 'white'}
                 />

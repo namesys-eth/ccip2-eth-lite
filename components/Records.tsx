@@ -3,6 +3,9 @@ import styles from '../pages/page.module.css'
 import { isMobile } from 'react-device-detect'
 import { useWindowDimensions } from '../hooks/useWindowDimensions'
 import * as constants from '../utils/constants'
+import {
+  useAccount
+} from 'wagmi'
 
 interface Record {
   id: string
@@ -11,16 +14,20 @@ interface Record {
   path: string
   source: string
   loading: boolean
+  new: string
 }
 
 interface RecordsContainerProps {
+  meta: any
   records: Record[]
   hue: string
+  handleModalData: (data: any) => void
+  handleTrigger: (data: boolean) => void
 }
 
-const Records: React.FC<RecordsContainerProps> = ({ records, hue }) => {
-  const [isLoading, setIsLoading] = React.useState('')
-  const [inputValue, setInputValue] = React.useState('')
+const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleModalData, handleTrigger }) => {
+  const { address: _Wallet_ } = useAccount()
+  const [inputValue, setInputValue] = React.useState(records)
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const { width, height } = useWindowDimensions() // Get window dimensions
 
@@ -32,6 +39,26 @@ const Records: React.FC<RecordsContainerProps> = ({ records, hue }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height])
 
+  // INIT
+  React.useEffect(() => {
+    handleModalData(inputValue)
+    handleTrigger(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue])
+
+  // Update values
+  async function update(type: string, value: string) {
+    setInputValue((prevInputValue) => {
+      const index = prevInputValue.findIndex((record) => record.id === type)
+      if (index !== -1) {
+        const updatedRecords = [...prevInputValue]
+        updatedRecords[index] = { ...updatedRecords[index], new: value }
+        return updatedRecords
+      }
+      return prevInputValue
+    })
+  }
+
   return (
     <div className={!mobile ? styles.grid : 'flex-column'}>
       {records.map((record) => (
@@ -41,7 +68,7 @@ const Records: React.FC<RecordsContainerProps> = ({ records, hue }) => {
               style={{
                 fontFamily: 'Spotnik',
                 fontSize: '17px',
-                color: '#d1d1d1',
+                color: 'skyblue',
                 marginBottom: '5px'
               }}
             >
@@ -51,12 +78,13 @@ const Records: React.FC<RecordsContainerProps> = ({ records, hue }) => {
               <input
                 id={`${record.id}`}
                 key='0'
-                placeholder={record.value || ''}
+                placeholder={record.value}
                 type='text'
-                value={record.value || ''}
+                value={!_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) || meta.resolver === constants.ccip2[meta.chainId === 5 ? 0 : 1] ? inputValue[inputValue.findIndex((_record) => _record.id === record.id)].new : record.value}
                 onChange={(e) => {
-                  setInputValue(e.target.value)
+                  update(record.id, e.target.value)
                 }}
+                disabled={!_Wallet_ || ((!meta.wrapped && _Wallet_ !== meta.owner) && (meta.wrapped && _Wallet_ !== meta.manager)) || meta.resolver !== constants.ccip2[meta.chainId === 5 ? 0 : 1]}
                 style={{
                   background: '#361a17',
                   outline: 'none',
@@ -82,7 +110,8 @@ const Records: React.FC<RecordsContainerProps> = ({ records, hue }) => {
                   fontWeight: '700',
                   margin: '0 0 0 -25px',
                   color: (!record.loading && record.value) ? 'lightgreen' : 'white',
-                  cursor: 'copy'
+                  cursor: 'copy',
+                  opacity: inputValue[inputValue.findIndex((_record) => _record.id === record.id)].new !== '' || !record.value ? '0' : '1'
                 }}
                 onClick={() => constants.copyToClipboard(`${record.value}`, `${record.id}`, `${record.id}-${record.type}`)}
               >
