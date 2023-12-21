@@ -9,6 +9,7 @@ interface Record {
   value: string
   type: string
   path: string
+  source: string
   loading: boolean
 }
 
@@ -47,7 +48,7 @@ const Records: React.FC<RecordsContainerProps> = ({ records }) => {
             </h2>
             <div className='flex-row'>
               <input
-                id={`${record.type}`}
+                id={`${record.id}`}
                 key='0'
                 placeholder={record.value || ''}
                 type='text'
@@ -56,7 +57,7 @@ const Records: React.FC<RecordsContainerProps> = ({ records }) => {
                   setInputValue(e.target.value)
                 }}
                 style={{
-                  background: '#1c0e0d',
+                  background: '#361a17',
                   outline: 'none',
                   border: 'none',
                   padding: '5px 30px 5px 5px',
@@ -73,6 +74,7 @@ const Records: React.FC<RecordsContainerProps> = ({ records }) => {
                 }}
               />
               <div
+                id={`${record.id}-${record.type}`}
                 className="material-icons-round"
                 style={{
                   fontSize: '22px',
@@ -81,7 +83,7 @@ const Records: React.FC<RecordsContainerProps> = ({ records }) => {
                   color: (!record.loading && record.value) ? 'lightgreen' : 'white',
                   cursor: 'copy'
                 }}
-                onClick={() => constants.copyToClipboard(`${record.value}`, `${record.type}`)}
+                onClick={() => constants.copyToClipboard(`${record.value}`, `${record.id}`, `${record.id}-${record.type}`)}
               >
                 {!record.loading ? 'content_copy' : 'hourglass_top'}
               </div>

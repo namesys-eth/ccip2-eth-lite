@@ -10,6 +10,8 @@ import iCCIP2Goerli from '../ABI/CCIP2Goerli.json'
 import iCCIP2Mainnet from '../ABI/CCIP2Mainnet.json'
 import { Alchemy, Network } from "alchemy-sdk"
 import { ethers } from 'ethers'
+import Web3 from 'web3'
+import { AbiItem } from 'web3-utils'
 import * as ensContent from '../utils/contenthash'
 import axios from 'axios'
 
@@ -55,6 +57,8 @@ export const alchemyConfig = {
   network: network === 'goerli' ? Network.ETH_GOERLI : Network.ETH_MAINNET,
   chainId: network === 'goerli' ? '5' : '1',
 }
+const alchemyEndpoint = `https://eth-${network}.g.alchemy.com/v2/` + alchemyConfig.apiKey
+const web3 = new Web3(alchemyEndpoint)
 export const alchemy = new Alchemy(alchemyConfig)
 export const provider = new ethers.AlchemyProvider(network, alchemyConfig.apiKey)
 export const ccip2 = [
@@ -140,49 +144,72 @@ export const records = {
     value: '',
     type: 'contenthash',
     path: 'contenthash',
-    loading: true
+    source: '',
+    loading: true,
+    ens: ''
   },
   "addr": {
     id: 'Address',
     value: '',
     type: 'address',
     path: 'address/60',
-    loading: true
+    source: '',
+    loading: true,
+    ens: ''
   },
   "avatar": {
     id: 'Avatar',
     value: '',
     type: 'text',
     path: 'text/avatar',
-    loading: true
+    source: '',
+    loading: true,
+    ens: ''
   },
   "url": {
     id: 'URL',
     value: '',
     type: 'text',
     path: 'text/url',
-    loading: true
+    source: '',
+    loading: true,
+    ens: ''
   },
   "description": {
     id: 'Description',
     value: '',
     type: 'text',
     path: 'text/description',
-    loading: true
+    source: '',
+    loading: true,
+    ens: ''
   },
   "com.twitter": {
     id: 'X | Twitter',
     value: '',
     type: 'text',
     path: 'text/com.twitter',
-    loading: true
+    source: '',
+    loading: true,
+    ens: ''
   },
   "com.discord": {
     id: 'Discord',
     value: '',
     type: 'text',
     path: 'text/com.discord',
-    loading: true
+    source: '',
+    loading: true,
+    ens: ''
+  },
+  "com.github": {
+    id: 'Github',
+    value: '',
+    type: 'text',
+    path: 'text/com.github',
+    source: '',
+    loading: true,
+    ens: ''
   }
 }
 
@@ -204,8 +231,8 @@ export function copyInput(element: string) {
   })
 }
 
-// Copy <span>
-export function copyToClipboard(value: string, spanId: string) {
+// Copy <span>, <div>
+export function copyToClipboard(value: string, spanId: string, divId: string) {
   const hiddenInput = document.createElement('input')
   hiddenInput.value = value
   document.body.appendChild(hiddenInput)
@@ -213,11 +240,48 @@ export function copyToClipboard(value: string, spanId: string) {
   document.execCommand('copy')
   document.body.removeChild(hiddenInput)
   const spanElement = document.getElementById(spanId)
-  if (spanElement) {
-    spanElement.style.color = '#00ff40';
+  const divElement = document.getElementById(divId)
+  if (spanElement && divElement) {
+    if (spanElement.style.color === 'white') spanElement.style.color = 'lightgreen'
+    else spanElement.style.color = 'white'
+    if (divElement.style.color === 'white') divElement.style.color = 'lightgreen'
+    else divElement.style.color = 'white'
     // Reset the color after a delay (e.g., 2 seconds)
     setTimeout(() => {
-      spanElement.style.color = 'lightgreen' // Reset to the default color
+      if (spanElement.style.color === 'lightgreen') spanElement.style.color = 'white' // Reset to the default color
+      else spanElement.style.color = 'lightgreen'
+      if (divElement.style.color === 'lightgreen') divElement.style.color = 'white'
+      else divElement.style.color = 'lightgreen'
     }, 2000)
   }
+}
+
+// Get ENS Records
+export function getENSRecords(resolver: string, ENS: string) {
+  let _ensRecords = {
+    contenthash: '',
+    avatar: '',
+    addr: '',
+    url: '',
+    description: '',
+    twitter: '',
+    discord: '',
+    github: ''
+  }
+  const _getENSRecords = async () => {
+    const contract = new web3.eth.Contract(
+      ensConfig[ensContracts.indexOf(resolver)].contractInterface as AbiItem[],
+      ensConfig[ensContracts.indexOf(resolver)].addressOrName
+    )
+    _ensRecords.contenthash = await contract.methods.getContenthash(ethers.namehash(ENS))
+    _ensRecords.avatar = await contract.methods.getText(ethers.namehash(ENS), 'avatar')
+    _ensRecords.addr = await contract.methods.getAddr(ethers.namehash(ENS))
+    _ensRecords.url = await contract.methods.getText(ethers.namehash(ENS), 'url')
+    _ensRecords.description = await contract.methods.getText(ethers.namehash(ENS), 'url')
+    _ensRecords.twitter = await contract.methods.getText(ethers.namehash(ENS), 'com.twitter')
+    _ensRecords.discord = await contract.methods.getText(ethers.namehash(ENS), 'com.discord')
+    _ensRecords.github = await contract.methods.getText(ethers.namehash(ENS), 'com.github')
+    return _ensRecords
+  }
+  _getENSRecords()
 }

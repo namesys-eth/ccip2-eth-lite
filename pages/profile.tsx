@@ -27,6 +27,7 @@ export default function Profile() {
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [found, setFound] = React.useState(false) // Set name registered or not status
   const [message, setMessage] = React.useState('Domain Not Registered') // Set message to display
+  const [justMigrated, setJustMigrated] = React.useState(false) // Set message to display
   const [records, setRecords] = React.useState(constants.records) // Set records 
   const [meta, setMeta] = React.useState(constants.meta) // Set ENS metadata
   const [tokenIDLegacy, setTokenIDLegacy] = React.useState('') // Set Token ID of unwrapped/legacy name
@@ -95,8 +96,8 @@ export default function Profile() {
         let _avatar: string
         let _records = { ...records }
         if (_avatarRaw.startsWith('ipfs://')) {
-          _avatar = `https://ipfs.io/ipfs/${_avatarRaw.split('ipfs://')[1]}`
-          _records.avatar.value = _avatar
+          _records.avatar.value = _avatarRaw
+          _records.avatar.source = `https://ipfs.io/ipfs/${_avatarRaw.split('ipfs://')[1]}`
           setRecords(_records)
         } else if (_avatarRaw.startsWith(`eip155:${chain}`)) {
           let _contract = _avatarRaw.split(':')[2].split('/')[0]
@@ -105,22 +106,24 @@ export default function Profile() {
             _contract,
             _tokenID
           ).then((_response: any) => {
-            _avatar = _response.media[0].thumbnail || _response.media[0].gateway
-            _records.avatar.value = _avatar
+            _records.avatar.value = _avatarRaw
+            _records.avatar.source = _response.media[0].thumbnail || _response.media[0].gateway
             setRecords(_records)
           })
         } else if (_avatarRaw.startsWith('https://')) {
-          _avatar = _avatarRaw
-          _records.avatar.value = _avatar
+          _records.avatar.value = _avatarRaw
+          _records.avatar.source = _avatarRaw
           setRecords(_records)
         } else {
           _avatar = _resolver ? await getAvatar(ENS, records) : ''
-        }  
+        }
         const _addr = _resolver ? await getAddr(ENS, records) : ''
         const _url = _resolver ? await getText(_resolver, 'url', records) : ''
         const _description = _resolver ? await getText(_resolver, 'description', records) : ''
         const _x_com = _resolver ? await getText(_resolver, 'com.twitter', records) : ''
         const _discord_com = _resolver ? await getText(_resolver, 'com.discord', records) : ''
+        const _github_com = _resolver ? await getText(_resolver, 'com.github', records) : ''
+        const _ensRecords = constants.getENSRecords(resolver, ENS)
       }
     }
     _getRecords()
@@ -308,7 +311,7 @@ export default function Profile() {
 
   return (
     <main className='flex-column'>
-      <div style={{ marginTop: '2.5%' }}></div>
+      <div style={{ marginTop: '1.5%' }}></div>
       <div className='flex-column' style={{ opacity: 0.35 }}>
         <Image
           className={'logo-2'}
@@ -330,7 +333,7 @@ export default function Profile() {
       <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 0' }}>
         <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 20px' }}>
           <img
-            src={records.avatar.value || '/profile.png'}
+            src={records.avatar.source || '/profile.png'}
             onError={(event) => {
               (event.target as any).onerror = null;
               (event.target as any).src = '/profile.png';
@@ -371,7 +374,7 @@ export default function Profile() {
                 <span
                   className='mono'
                   id="metaResolver"
-                  onClick={() => constants.copyToClipboard(meta.resolver, "metaResolver")}
+                  onClick={() => constants.copyToClipboard(meta.resolver, "metaResolver", "this")}
                 >
                   {mobile ? constants.truncateHexString(meta.resolver) : meta.resolver}
                 </span>
@@ -382,7 +385,7 @@ export default function Profile() {
                 <span
                   className='mono'
                   id="metaOwner"
-                  onClick={() => constants.copyToClipboard(meta.owner, "metaOwner")}
+                  onClick={() => constants.copyToClipboard(meta.owner, "metaOwner", "this")}
                   color=''
                 >
                   {mobile ? constants.truncateHexString(meta.owner) : meta.owner}
@@ -394,7 +397,7 @@ export default function Profile() {
                 <span
                   className='mono'
                   id="metaManager"
-                  onClick={() => constants.copyToClipboard(meta.manager, "metaManager")}
+                  onClick={() => constants.copyToClipboard(meta.manager, "metaManager", "this")}
                 >
                   {mobile ? constants.truncateHexString(meta.manager) : meta.manager}
                 </span>
@@ -511,7 +514,7 @@ export default function Profile() {
           {'ENS DAO'}
         </span>
       </div>
-      <div style={{ marginTop: '2.5%' }}></div>
+      <div id='this' style={{ marginTop: '2.5%' }}></div>
     </main>
   )
 }
