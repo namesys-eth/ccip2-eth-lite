@@ -647,7 +647,7 @@ export default function Profile() {
                   handleTrigger={handleRecordsTrigger}
                   handleModalData={handleRecordsModalData}
                   records={Object.values(records)}
-                  hue={!_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) ? 'lightgreen' : 'white'}
+                  hue={!_Wallet_ || ((!meta.wrapped && _Wallet_ !== meta.owner) && (meta.wrapped && _Wallet_ !== meta.manager)) ? 'white' : 'orange'}
                 />
               </div>
             </div>
