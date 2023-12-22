@@ -103,7 +103,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
           <input
             id='keyid'
             key='0'
-            placeholder={inputValue || 'enter source resolver'}
+            placeholder={inputValue || 'enter source resolver address'}
             type='text'
             value={inputValue}
             onChange={(e) => {
@@ -130,7 +130,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
             className="button"
             style={{
               height: '30px',
-              width: '120px',
+              width: '110px',
               marginTop: '23px',
               fontSize: '15px'
             }}
@@ -145,7 +145,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
                 fontWeight: '700'
               }}
             >
-              {'Confirm'}&nbsp;<span className="material-icons smoller">local_laundry_service</span>
+              {'Import'}&nbsp;<span className="material-icons smoller">local_laundry_service</span>
             </div>
           </button>
         </StyledModalBody>

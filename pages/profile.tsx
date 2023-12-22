@@ -115,8 +115,8 @@ export default function Profile() {
     const _getRecords = async () => {
       if (resolver && ENS) {
         const _resolver = await ethers.EnsResolver.fromName(provider, ENS)
-        const _contenthash = _resolver ? await getContenthash(_resolver, records) : ''
         const _avatarRaw = _resolver ? await getText(_resolver, 'avatar', records) : ''
+        const _contenthash = _resolver ? await getContenthash(_resolver, records) : ''
         let _avatar: string
         let _records = { ...records }
         if (_avatarRaw.startsWith('ipfs://')) {
@@ -255,11 +255,13 @@ export default function Profile() {
         setRecords(_records_)
         return _contenthash
       } else {
+        _records_.contenthash.value = ''
         _records_.contenthash.loading = false
         setRecords(_records_)
         return ''
       }
     } catch {
+      _records_.contenthash.value = ''
       _records_.contenthash.loading = false
       setRecords(_records_)
       return ''
@@ -277,12 +279,13 @@ export default function Profile() {
         setRecords(_records_)
         return _avatar
       } else {
+        _records_.avatar.value = ''
         _records_.avatar.loading = false
         setRecords(_records_)
         return ''
       }
     } catch (error) {
-      console.log(error)
+      _records_.avatar.value = ''
       _records_.avatar.loading = false
       setRecords(_records_)
       return ''
@@ -300,12 +303,13 @@ export default function Profile() {
         setRecords(_records_)
         return _addr
       } else {
+        _records_.addr.value = ''
         _records_.addr.loading = false
         setRecords(_records_)
         return ''
       }
     } catch (error) {
-      console.log(error)
+      _records_.addr.value = ''
       _records_.addr.loading = false
       setRecords(_records_)
       return ''
@@ -323,11 +327,13 @@ export default function Profile() {
         setRecords(_records_)
         return _record
       } else {
+        _records_[_key].value = ''
         _records_[_key].loading = false
         setRecords(_records_)
         return ''
       }
     } catch (error) {
+      _records_[_key].value = ''
       _records_[_key].loading = false
       setRecords(_records_)
       return ''
@@ -467,7 +473,7 @@ export default function Profile() {
                 <div
                   className={!mobile ? 'flex-column-sans-align' : 'flex-column'}
                   style={{
-                    margin: !mobile ? '-9.375% 0 0 -44%' : '0 0 0 0',
+                    margin: !mobile ? '-9.375% 0 0 -41%' : '0 0 0 0',
                     color: '#ff2600'
                   }}
                 >
@@ -496,10 +502,15 @@ export default function Profile() {
                     <span
                       className='mono'
                       id="metaResolver"
-                      onClick={() => constants.copyToClipboard(meta.resolver, "metaResolver", "this")}
+                      onClick={() => constants.copyToClipboard(meta.resolver, "metaResolver", "none")}
                     >
                       {mobile ? constants.truncateHexString(meta.resolver) : meta.resolver}
                     </span>
+                    <img
+                      src={constants.ensContracts.includes(resolver) ? 'ens.png' : (resolver === ccip2Contract ? 'logo.png' : '')}
+                      width={'15px'}
+                      style={{ margin: `0 15px -3px 7.5px` }}
+                    />
                   </div>
                   <div>
                     <span>{'Owner'}</span>
@@ -507,7 +518,7 @@ export default function Profile() {
                     <span
                       className='mono'
                       id="metaOwner"
-                      onClick={() => constants.copyToClipboard(meta.owner, "metaOwner", "this")}
+                      onClick={() => constants.copyToClipboard(meta.owner, "metaOwner", "none")}
                       color=''
                     >
                       {mobile ? constants.truncateHexString(meta.owner) : meta.owner}
@@ -519,7 +530,7 @@ export default function Profile() {
                     <span
                       className='mono'
                       id="metaManager"
-                      onClick={() => constants.copyToClipboard(meta.manager, "metaManager", "this")}
+                      onClick={() => constants.copyToClipboard(meta.manager, "metaManager", "none")}
                     >
                       {mobile ? constants.truncateHexString(meta.manager) : meta.manager}
                     </span>

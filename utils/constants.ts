@@ -65,7 +65,8 @@ export const meta = {
   owner: zeroAddress,
   manager: zeroAddress,
   wrapped: false,
-  chainId: 1
+  chainId: 1,
+  oldResolver: ''
 }
 
 let network = process.env.NEXT_PUBLIC_NETWORK
@@ -159,83 +160,91 @@ export const ccip2Config = [
 export const records = {
   "contenthash": {
     id: 'Contenthash',
-    value: '',
+    value: 'loading...',
     type: 'contenthash',
     path: 'contenthash',
     source: '',
     loading: true,
     ens: '',
-    new: ''
+    new: '',
+    help: 'Your ENS Contenthash'
   },
   "addr": {
     id: 'Address',
-    value: '',
+    value: 'loading...',
     type: 'address',
     path: 'address/60',
     source: '',
     loading: true,
     ens: '',
-    new: ''
+    new: '',
+    help: 'Your Ethereum Address'
   },
   "avatar": {
     id: 'Avatar',
-    value: '',
+    value: 'loading...',
     type: 'text',
     path: 'text/avatar',
     source: '',
     loading: true,
     ens: '',
-    new: ''
+    new: '',
+    help: 'Link to Your Avatar'
   },
   "url": {
     id: 'URL',
-    value: '',
+    value: 'loading...',
     type: 'text',
     path: 'text/url',
     source: '',
     loading: true,
     ens: '',
-    new: ''
+    new: '',
+    help: 'Your URL Text Record'
   },
   "description": {
     id: 'Description',
-    value: '',
+    value: 'loading...',
     type: 'text',
     path: 'text/description',
     source: '',
     loading: true,
     ens: '',
-    new: ''
+    new: '',
+    help: 'Your Short Description'
   },
   "com.twitter": {
     id: 'X | Twitter',
-    value: '',
+    value: 'loading...',
     type: 'text',
     path: 'text/com.twitter',
     source: '',
     loading: true,
     ens: '',
-    new: ''
+    new: '',
+    help: 'Your Twitter/X Handle Without @'
   },
   "com.discord": {
     id: 'Discord',
-    value: '',
+    value: 'loading...',
     type: 'text',
     path: 'text/com.discord',
     source: '',
     loading: true,
     ens: '',
-    new: ''
+    new: '',
+    help: 'Your Discord Username'
   },
   "com.github": {
     id: 'Github',
-    value: '',
+    value: 'loading...',
     type: 'text',
     path: 'text/com.github',
     source: '',
     loading: true,
     ens: '',
-    new: ''
+    new: '',
+    help: 'Your GitHub Username/ID'
   }
 }
 
