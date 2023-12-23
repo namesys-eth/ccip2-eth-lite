@@ -36,9 +36,9 @@ export default function Home() {
           priority
         />
         <div className='flex-column'>
-          <h2 style={{ color: '#ff2600' }}>
+          <h1 style={{ color: '#ff2600' }}>
             NameSys
-          </h2>
+          </h1>
           <h4 style={{ color: '#fc4e14', marginTop: '-25px' }}>
             Lite
           </h4>
@@ -64,9 +64,9 @@ export default function Home() {
           rel="noopener noreferrer"
           style={{ color: '#ff2600' }}
         >
-          <h2>
+          <h1 style={{ fontSize: '24px' }}>
             NAMESYS PRO <span className="material-icons micon">settings</span>
-          </h2>
+          </h1>
           <p>NameSys Pro Client</p>
         </a>
 
@@ -76,9 +76,9 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <h2>
+          <h1 style={{ fontSize: '24px' }}>
             DOCS <span className="material-icons micon">library_books</span>
-          </h2>
+          </h1>
           <p>Learn More</p>
         </a>
 
@@ -88,9 +88,9 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <h2>
+          <h1 style={{ fontSize: '24px' }}>
             CODE <span className="material-icons micon">developer_mode</span>
-          </h2>
+          </h1>
           <p>Source Codes</p>
         </a>
       </div>

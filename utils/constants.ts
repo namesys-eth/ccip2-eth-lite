@@ -16,7 +16,7 @@ import * as ensContent from '../utils/contenthash'
 import axios from 'axios'
 
 export interface MainBodyState {
-  modalData: string | undefined
+  modalData: string
   trigger: boolean
 }
 
@@ -293,31 +293,44 @@ export function copyToClipboard(value: string, spanId: string, divId: string) {
 
 // Get ENS Records
 export async function getENSRecords(resolver: string, ENS: string) {
-  let _ensRecords = { ...ensRecords }
   try {
-    if (ensContracts.includes(resolver)) {
-      const _getENSRecords = async () => {
-        const contract = new web3.eth.Contract(
-          ensConfig[ensContracts.indexOf(resolver)].contractInterface as AbiItem[],
-          ensConfig[ensContracts.indexOf(resolver)].addressOrName
-        )
-        _ensRecords.contenthash = await contract.methods.contenthash(ethers.namehash(ENS))
-        _ensRecords.avatar = await contract.methods.text(ethers.namehash(ENS), 'avatar')
-        _ensRecords.addr = await contract.methods.addr(ethers.namehash(ENS))
-        _ensRecords.url = await contract.methods.text(ethers.namehash(ENS), 'url')
-        _ensRecords.description = await contract.methods.text(ethers.namehash(ENS), 'url')
-        _ensRecords.twitter = await contract.methods.text(ethers.namehash(ENS), 'com.twitter')
-        _ensRecords.discord = await contract.methods.text(ethers.namehash(ENS), 'com.discord')
-        _ensRecords.github = await contract.methods.text(ethers.namehash(ENS), 'com.github')
-        return _ensRecords
-      }
-      _getENSRecords()
+    if (resolver && ensContracts.includes(resolver)) {
+      const contract = new web3.eth.Contract(
+        ensConfig[ensContracts.indexOf(resolver)].contractInterface as AbiItem[],
+        ensConfig[ensContracts.indexOf(resolver)].addressOrName
+      )
+      let _ensRecords = { ...ensRecords }
+      await contract.methods.contenthash(ethers.namehash(ENS)).call().then(async (value: string) => {
+        _ensRecords.contenthash = value
+        await contract.methods.text(ethers.namehash(ENS), 'avatar').call().then(async (value: string) => {
+          _ensRecords.avatar = value
+          await contract.methods.addr(ethers.namehash(ENS)).call().then(async (value: string) => {
+            _ensRecords.addr = value
+            await contract.methods.text(ethers.namehash(ENS), 'url').call().then(async (value: string) => {
+              _ensRecords.url = value
+              await contract.methods.text(ethers.namehash(ENS), 'description').call().then(async (value: string) => {
+                _ensRecords.description = value
+                await contract.methods.text(ethers.namehash(ENS), 'com.twitter').call().then(async (value: string) => {
+                  _ensRecords.twitter = value
+                  await contract.methods.text(ethers.namehash(ENS), 'com.discord').call().then(async (value: string) => {
+                    _ensRecords.discord = value
+                    await contract.methods.text(ethers.namehash(ENS), 'com.github').call().then(async (value: string) => {
+                      _ensRecords.github = value
+                      return _ensRecords
+                    })
+                  })
+                })
+              })
+            })
+          })
+        })
+      })
     } else {
-      return _ensRecords
+      return { ...ensRecords }
     }
   } catch (error) {
     console.error(error)
-    return _ensRecords
+    return { ...ensRecords }
   }
 }
 

@@ -70,7 +70,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
         <div key={record.path} className={!mobile ? styles.arrange : 'flex-column'}>
           <div className='flex-sans-align'>
             <div className='flex-row-sans-justify'>
-              <h2
+              <h1
                 style={{
                   fontFamily: 'Spotnik',
                   fontSize: '17px',
@@ -79,7 +79,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
                 }}
               >
                 {record.id}
-              </h2>
+              </h1>
               <button
                 className="button-tiny"
                 onClick={() => {
@@ -123,7 +123,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
                   width: '400px',
                   wordWrap: 'break-word',
                   textAlign: 'left',
-                  color: hue,
+                  color: record.value !== 'loading...' ? 'lightgreen' : hue,
                   cursor: 'copy'
                 }}
               />

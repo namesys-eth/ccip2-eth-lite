@@ -57,7 +57,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
           style={{
             fontFamily: query ? 'SF Mono' : 'Spotnik',
             fontWeight: '600',
-            fontSize: query ? '22px' : '19px',
+            fontSize: query ? '21px' : '19px',
             paddingTop: query ? '8px' : '15px',
             paddingBottom: query ? '8px' : '15px',
           }}

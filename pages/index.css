@@ -736,15 +736,15 @@ button:not(:disabled):hover {
 }
 
 h1 {
-  font-size: 32px;
   font-family: "Spotnik" !important;
-  font-weight: 400;
+  font-size: 44px;
+  font-weight: 800;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale
 }
 
 h2 {
-  font-family: "Spotnik";
+  font-family: "SF Mono" !important;
   font-size: 44px;
   font-weight: 800;
 }

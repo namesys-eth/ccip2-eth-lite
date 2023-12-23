@@ -8,6 +8,7 @@ import { ethers } from 'ethers'
 import * as constants from '../utils/constants'
 import { isMobile } from 'react-device-detect'
 import Loading from '../components/LoadingColors'
+import { AbiItem } from 'web3-utils'
 import Records from '../components/Records'
 import * as ensContent from '../utils/contenthash'
 import ResolverModal from '../components/ResolverModal'
@@ -22,6 +23,11 @@ import {
 } from 'wagmi'
 import Web3 from 'web3'
 
+const modalTemplate = {
+  modalData: '',
+  trigger: false
+}
+
 export default function Profile() {
   const router = useRouter()
   const { query } = router.query // Query from main page
@@ -31,7 +37,8 @@ export default function Profile() {
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [found, setFound] = React.useState(false) // Set name registered or not status
   const [color, setColor] = React.useState('lightgreen') // Set color
-  const [message, setMessage] = React.useState('Domain Not Registered') // Set message to display
+  const [cache, setCache] = React.useState(constants.ensRecords) // Set cache
+  const [message, setMessage] = React.useState('Loading') // Set message to display
   const [justMigrated, setJustMigrated] = React.useState(false) // Set migrated flag
   const [canUse, setCanUse] = React.useState(false) // Set import flag
   const [resolverModal, setResolverModal] = React.useState(false) // Resolver modal
@@ -41,10 +48,7 @@ export default function Profile() {
   const [namehashLegacy, setNamehashLegacy] = React.useState('') // Legacy Namehash of ENS Domain
   const [tokenIDWrapper, setTokenIDWrapper] = React.useState('') // Set Token ID of wrapped name
   const [loading, setLoading] = React.useState(true) // Loading Records marker
-  const [recordsModalState, setRecordsModalState] = React.useState<constants.MainBodyState>({
-    modalData: undefined,
-    trigger: false
-  }) // Gateway modal state
+  const [resolverModalState, setResolverModalState] = React.useState<constants.MainBodyState>(modalTemplate) // Gateway modal state
 
   // Variables
   const chain = process.env.NEXT_PUBLIC_NETWORK === 'mainnet' ? '1' : '5'
@@ -62,13 +66,13 @@ export default function Profile() {
   const PORT = process.env.NEXT_PUBLIC_PORT
   const SERVER = process.env.NEXT_PUBLIC_SERVER
 
-  // Handle Gateway modal data return
-  const handleRecordsModalData = (data: string | undefined) => {
-    setRecordsModalState(prevState => ({ ...prevState, modalData: data }))
+  // Handle Resolver modal data return
+  const handleResolverModalData = (data: string) => {
+    setResolverModalState(prevState => ({ ...prevState, modalData: data }))
   }
-  // Handle Gateway modal trigger
-  const handleRecordsTrigger = (trigger: boolean) => {
-    setRecordsModalState(prevState => ({ ...prevState, trigger: trigger }))
+  // Handle Resolver modal trigger
+  const handleResolverTrigger = (trigger: boolean) => {
+    setResolverModalState(prevState => ({ ...prevState, trigger: trigger }))
   }
 
   // FUNCTIONS
@@ -109,6 +113,63 @@ export default function Profile() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
+
+  // Gets past ENS records upon request
+  React.useEffect(() => {
+    if (resolverModalState.trigger && constants.ensContracts.includes(resolverModalState.modalData)) {
+      const _getENSRecords = async () => {
+        try {
+          setMessage('Importing')
+          setLoading(true)
+          const contract = new web3.eth.Contract(
+            constants.ensConfig[constants.ensContracts.indexOf(resolverModalState.modalData)].contractInterface as AbiItem[],
+            constants.ensConfig[constants.ensContracts.indexOf(resolverModalState.modalData)].addressOrName
+          )
+          let _ensRecords = { ...constants.ensRecords }
+          await contract.methods.contenthash(ethers.namehash(ENS)).call().then(async (value: string) => {
+            _ensRecords.contenthash = value
+            await contract.methods.text(ethers.namehash(ENS), 'avatar').call().then(async (value: string) => {
+              _ensRecords.avatar = value
+              await contract.methods.addr(ethers.namehash(ENS)).call().then(async (value: string) => {
+                _ensRecords.addr = value
+                await contract.methods.text(ethers.namehash(ENS), 'url').call().then(async (value: string) => {
+                  _ensRecords.url = value
+                  await contract.methods.text(ethers.namehash(ENS), 'description').call().then(async (value: string) => {
+                    _ensRecords.description = value
+                    await contract.methods.text(ethers.namehash(ENS), 'com.twitter').call().then(async (value: string) => {
+                      _ensRecords.twitter = value
+                      await contract.methods.text(ethers.namehash(ENS), 'com.discord').call().then(async (value: string) => {
+                        _ensRecords.discord = value
+                        await contract.methods.text(ethers.namehash(ENS), 'com.github').call().then(async (value: string) => {
+                          _ensRecords.github = value
+                          let _records = { ...records }
+                          _records.addr.ens = _records.addr.value
+                          _records.avatar.ens = _records.avatar.value
+                          _records.contenthash.ens = _records.contenthash.value
+                          _records.url.ens = _records.url.value
+                          _records.description.ens = _records.description.value
+                          _records['com.github'].ens = _records['com.github'].value
+                          _records['com.twitter'].ens = _records['com.twitter'].value
+                          _records['com.discord'].ens = _records['com.discord'].value
+                          setRecords(_records)
+                          setCache(_ensRecords)
+                          setLoading(false)
+                        })
+                      })
+                    })
+                  })
+                })
+              })
+            })
+          })
+        } catch (error) {
+          console.error(error)
+        }
+      }
+      _getENSRecords()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolverModalState])
 
   // Sets ENS domain
   React.useEffect(() => {
@@ -152,19 +213,15 @@ export default function Profile() {
             if (resolver !== ccip2Contract) {
               if (constants.ensContracts.includes(resolver)) {
                 let _records = { ...records }
-                let _ensRecords = await constants.getENSRecords(resolver, ENS)
-                if (_ensRecords) {
-                  _records.addr.ens = _ensRecords.addr
-                  _records.avatar.ens = _ensRecords.avatar
-                  _records.contenthash.ens = _ensRecords.contenthash
-                  _records.url.ens = _ensRecords.url
-                  _records.description.ens = _ensRecords.description
-                  _records['com.github'].ens = _ensRecords.github
-                  _records['com.twitter'].ens = _ensRecords.twitter
-                  _records['com.discord'].ens = _ensRecords.discord
-                  setRecords(_records)
-                  console.log(_records)
-                }
+                _records.addr.ens = _records.addr.value
+                _records.avatar.ens = _records.avatar.value
+                _records.contenthash.ens = _records.contenthash.value
+                _records.url.ens = _records.url.value
+                _records.description.ens = _records.description.value
+                _records['com.github'].ens = _records['com.github'].value
+                _records['com.twitter'].ens = _records['com.twitter'].value
+                _records['com.discord'].ens = _records['com.discord'].value
+                setRecords(_records)
               }
             } else {
               if (_Recordhash_ || _Ownerhash_) {
@@ -192,6 +249,8 @@ export default function Profile() {
                       setCanUse(true)
                     }
                   }
+                } else {
+                  setCanUse(true)
                 }
               }
             }
@@ -221,6 +280,40 @@ export default function Profile() {
   const { isSuccess: txSuccess, isError: txError, isLoading: txLoading } = useWaitForTransaction({
     hash: response1of1?.hash,
   })
+  // Sets migration state to true upon successful Transaction 1 receipt (for Ownerhash)
+  React.useEffect(() => {
+    if (isMigrateSuccess && txSuccess) {
+      setMessage('Transaction Confirmed')
+      setTimeout(() => {
+        let _meta = { ...meta }
+        _meta.oldResolver = resolver
+        setMeta(_meta)
+        setResolver(ccip2Contract)
+        setJustMigrated(true)
+        setLoading(false)
+      }, 2000)
+    }
+    if (txLoading) {
+      setMessage('Waiting for Confirmation')
+    }
+    if (txError) {
+      setMessage('Transaction Failed')
+      setLoading(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMigrateSuccess, txSuccess, txLoading, txError])
+
+  // Handles Transaction 1 wait for Resolver
+  React.useEffect(() => {
+    if (isMigrateLoading && !isMigrateError) {
+      setLoading(true)
+      setMessage('Waiting for Transaction')
+    } else if (isMigrateError && !isMigrateLoading) {
+      setMessage('Transaction Declined by User')
+      setLoading(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMigrateLoading, isMigrateError])
 
   // Handle recent migration & import
   React.useEffect(() => {
@@ -418,12 +511,29 @@ export default function Profile() {
   return (
     <main className='flex-column'>
       {loading && (
-        <div style={{ marginTop: '350px' }}>
-          <Loading
-            height={50}
-            width={50}
-          />
-        </div>
+        <>
+          <div style={{ marginTop: '350px' }}>
+            <Loading
+              height={50}
+              width={50}
+            />
+          </div>
+          <div
+            style={{
+              marginTop: '20px'
+            }}
+          >
+            <span
+              style={{
+                color: '#fc6603',
+                fontSize: '20px',
+                fontWeight: '700'
+              }}
+            >
+              {message}
+            </span>
+          </div>
+        </>
       )}
       {!loading && (
         <>
@@ -502,7 +612,7 @@ export default function Profile() {
                     <span
                       className='mono'
                       id="metaResolver"
-                      onClick={() => constants.copyToClipboard(meta.resolver, "metaResolver", "none")}
+                      onClick={() => constants.copyToClipboard(meta.resolver, "none", "metaResolver")}
                     >
                       {mobile ? constants.truncateHexString(meta.resolver) : meta.resolver}
                     </span>
@@ -518,7 +628,7 @@ export default function Profile() {
                     <span
                       className='mono'
                       id="metaOwner"
-                      onClick={() => constants.copyToClipboard(meta.owner, "metaOwner", "none")}
+                      onClick={() => constants.copyToClipboard(meta.owner, "none", "metaOwner")}
                       color=''
                     >
                       {mobile ? constants.truncateHexString(meta.owner) : meta.owner}
@@ -530,7 +640,7 @@ export default function Profile() {
                     <span
                       className='mono'
                       id="metaManager"
-                      onClick={() => constants.copyToClipboard(meta.manager, "metaManager", "none")}
+                      onClick={() => constants.copyToClipboard(meta.manager, "none", "metaManager")}
                     >
                       {mobile ? constants.truncateHexString(meta.manager) : meta.manager}
                     </span>
@@ -655,8 +765,8 @@ export default function Profile() {
               <div>
                 <Records
                   meta={meta}
-                  handleTrigger={handleRecordsTrigger}
-                  handleModalData={handleRecordsModalData}
+                  handleModalData={function (data: string | undefined): void { }}
+                  handleTrigger={function (data: boolean): void { }}
                   records={Object.values(records)}
                   hue={!_Wallet_ || ((!meta.wrapped && _Wallet_ !== meta.owner) && (meta.wrapped && _Wallet_ !== meta.manager)) ? 'white' : 'orange'}
                 />
@@ -668,8 +778,8 @@ export default function Profile() {
               onClose={() => setResolverModal(false)}
               show={resolverModal}
               children={resolver === ccip2Contract ? '' : resolver}
-              handleModalData={function (data: string | undefined): void { }}
-              handleTrigger={function (data: boolean): void { }}
+              handleTrigger={handleResolverTrigger}
+              handleModalData={handleResolverModalData}
             >
             </ResolverModal>
           </div>
@@ -681,9 +791,9 @@ export default function Profile() {
               rel="noopener noreferrer"
               style={{ color: '#ff2600' }}
             >
-              <h2>
+              <h1 style={{ fontSize: '24px' }}>
                 NAMESYS PRO <span className="material-icons micon">settings</span>
-              </h2>
+              </h1>
               <p>NameSys Pro Client</p>
             </a>
 
@@ -693,9 +803,9 @@ export default function Profile() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <h2>
+              <h1 style={{ fontSize: '24px' }}>
                 DOCS <span className="material-icons micon">library_books</span>
-              </h2>
+              </h1>
               <p>Learn More</p>
             </a>
 
@@ -705,9 +815,9 @@ export default function Profile() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <h2>
+              <h1 style={{ fontSize: '24px' }}>
                 CODE <span className="material-icons micon">developer_mode</span>
-              </h2>
+              </h1>
               <p>Source Codes</p>
             </a>
           </div>
@@ -737,7 +847,7 @@ export default function Profile() {
               {'ENS DAO'}
             </span>
           </div>
-          <div id='this' style={{ marginTop: '2.5%' }}></div>
+          <div id='none' style={{ marginTop: '2.5%' }}></div>
         </>
       )}
     </main>

@@ -9,7 +9,7 @@ interface ModalProps {
   show: boolean
   onClose: any
   children: string
-  handleModalData: (data: string | undefined) => void
+  handleModalData: (data: string) => void
   handleTrigger: (data: boolean) => void
 }
 
@@ -25,7 +25,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
   }, [])
 
   const handleCloseClick = (e: { preventDefault: () => void; }) => {
-    handleModalData(undefined)
+    handleModalData('')
     handleTrigger(false)
     setInputValue(children)
     e.preventDefault()
@@ -156,10 +156,10 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
           icon={'info'}
           onClose={() => setHelpModal(false)}
           show={helpModal}
-          position={''} 
-          children={help} 
-          handleModalData={function (data: string | undefined): void {throw new Error()}} 
-          handleTrigger={function (data: boolean): void {throw new Error()}}
+          position={''}
+          children={help}
+          handleModalData={function (data: string | undefined): void { throw new Error() }}
+          handleTrigger={function (data: boolean): void { throw new Error() }}
         >
         </Help>
       </div>
