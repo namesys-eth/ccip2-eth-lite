@@ -65,7 +65,7 @@ export const meta = {
   owner: zeroAddress,
   manager: zeroAddress,
   wrapped: false,
-  chainId: 1,
+  chainId: process.env.NEXT_PUBLIC_NETWORK === 'goerli' ? 5 : 1,
   oldResolver: ''
 }
 
@@ -159,7 +159,8 @@ export const ccip2Config = [
 // ENS Domain's Records
 export const records = {
   "contenthash": {
-    id: 'Contenthash',
+    id: 'contenthash',
+    header: 'Contenthash',
     value: 'loading...',
     type: 'contenthash',
     path: 'contenthash',
@@ -170,7 +171,8 @@ export const records = {
     help: 'Your ENS Contenthash'
   },
   "addr": {
-    id: 'Address',
+    id: 'addr',
+    header: 'Address',
     value: 'loading...',
     type: 'address',
     path: 'address/60',
@@ -181,7 +183,8 @@ export const records = {
     help: 'Your Ethereum Address'
   },
   "avatar": {
-    id: 'Avatar',
+    id: 'avatar',
+    header: 'Avatar',
     value: 'loading...',
     type: 'text',
     path: 'text/avatar',
@@ -192,7 +195,8 @@ export const records = {
     help: 'Link to Your Avatar'
   },
   "url": {
-    id: 'URL',
+    id: 'url',
+    header: 'URL',
     value: 'loading...',
     type: 'text',
     path: 'text/url',
@@ -203,7 +207,8 @@ export const records = {
     help: 'Your URL Text Record'
   },
   "description": {
-    id: 'Description',
+    id: 'description',
+    header: 'Description',
     value: 'loading...',
     type: 'text',
     path: 'text/description',
@@ -214,7 +219,8 @@ export const records = {
     help: 'Your Short Description'
   },
   "com.twitter": {
-    id: 'X | Twitter',
+    id: 'twitter',
+    header: 'X | Twitter',
     value: 'loading...',
     type: 'text',
     path: 'text/com.twitter',
@@ -225,7 +231,8 @@ export const records = {
     help: 'Your Twitter/X Handle Without @'
   },
   "com.discord": {
-    id: 'Discord',
+    id: 'discord',
+    header: 'Discord',
     value: 'loading...',
     type: 'text',
     path: 'text/com.discord',
@@ -236,7 +243,8 @@ export const records = {
     help: 'Your Discord Username'
   },
   "com.github": {
-    id: 'Github',
+    id: 'github',
+    header: 'Github',
     value: 'loading...',
     type: 'text',
     path: 'text/com.github',
@@ -248,10 +256,28 @@ export const records = {
   }
 }
 
+// Checks if value is good for a field
+export function isGoodValue(id: string, value: string) {
+  if (value !== null) {
+    return (
+      (id === 'contenthash' && isContenthash(value)) ||
+      (id === 'addr' && isAddr(value)) ||
+      (id === 'avatar' && isAvatar(value)) ||
+      (id === 'url' && isUrl(value)) ||
+      (id === 'description') && value ||
+      (id === 'twitter' && isTwitter(value)) ||
+      (id === 'discord' && isDiscord(value)) ||
+      (id === 'github' && isGithub(value))
+    )
+  } else {
+    return false
+  }
+}
+
 // Truncate hex string
 export function truncateHexString(hexString: string) {
   const prefix = hexString.slice(0, 2)
-  const truncated = hexString.slice(2, 5) + '...' + hexString.slice(-3)
+  const truncated = hexString.slice(2, 6) + '...' + hexString.slice(-4)
   return prefix + truncated
 }
 

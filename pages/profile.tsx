@@ -88,6 +88,10 @@ export default function Profile() {
       return constants.zeroAddress
     }
   }
+  // Whether connector is authorised to write
+  function unauthorised() {
+    return !_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) || meta.resolver !== constants.ccip2[meta.chainId === 5 ? 0 : 1]
+  }
 
   // INIT
   React.useEffect(() => {
@@ -143,14 +147,32 @@ export default function Profile() {
                         await contract.methods.text(ethers.namehash(ENS), 'com.github').call().then(async (value: string) => {
                           _ensRecords.github = value
                           let _records = { ...records }
-                          _records.addr.ens = _records.addr.value
-                          _records.avatar.ens = _records.avatar.value
-                          _records.contenthash.ens = _records.contenthash.value
-                          _records.url.ens = _records.url.value
-                          _records.description.ens = _records.description.value
-                          _records['com.github'].ens = _records['com.github'].value
-                          _records['com.twitter'].ens = _records['com.twitter'].value
-                          _records['com.discord'].ens = _records['com.discord'].value
+                          _records.addr.ens = _ensRecords.addr
+                          _records.avatar.ens = _ensRecords.avatar
+                          _records.contenthash.ens = _ensRecords.contenthash
+                          _records.url.ens = _ensRecords.url
+                          _records.description.ens = _ensRecords.description
+                          _records['com.github'].ens = _ensRecords.github
+                          _records['com.twitter'].ens = _ensRecords.twitter
+                          _records['com.discord'].ens = _ensRecords.discord
+
+                          _records.addr.new = _ensRecords.addr
+                          _records.avatar.new = _ensRecords.avatar
+                          _records.contenthash.new = _ensRecords.contenthash
+                          _records.url.new = _ensRecords.url
+                          _records.description.new = _ensRecords.description
+                          _records['com.github'].new = _ensRecords.github
+                          _records['com.twitter'].new = _ensRecords.twitter
+                          _records['com.discord'].new = _ensRecords.discord
+
+                          _records.addr.value = _ensRecords.addr
+                          _records.avatar.value = _ensRecords.avatar
+                          _records.contenthash.value = _ensRecords.contenthash
+                          _records.url.value = _ensRecords.url
+                          _records.description.value = _ensRecords.description
+                          _records['com.github'].value = _ensRecords.github
+                          _records['com.twitter'].value = _ensRecords.twitter
+                          _records['com.discord'].value = _ensRecords.discord
                           setRecords(_records)
                           setCache(_ensRecords)
                           setLoading(false)
@@ -287,6 +309,7 @@ export default function Profile() {
       setTimeout(() => {
         let _meta = { ...meta }
         _meta.oldResolver = resolver
+        _meta.resolver = ccip2Contract
         setMeta(_meta)
         setResolver(ccip2Contract)
         setJustMigrated(true)
@@ -571,7 +594,7 @@ export default function Profile() {
                   (event.target as any).src = '/profile.png';
                 }}
                 width={'120px'}
-                style={{ margin: '0 15px -3px 0' }}
+                style={{ margin: !mobile ? '0 15px -3px 0' : '-30px 15px 15px 0' }}
               />
               <div
                 className={!mobile ? 'flex-row' : 'flex-column'}
@@ -690,7 +713,7 @@ export default function Profile() {
               <div
                 className='flex-column'
                 style={{
-                  margin: '-10% 0 0 90.75%'
+                  margin: !mobile ? '-10% 0 0 90.75%' : '0 0 0 90.75%'
                 }}
               >
                 <button
@@ -705,17 +728,18 @@ export default function Profile() {
                     style={{
                       color: meta.resolver === ccip2Contract ? 'lightgreen' : 'orange',
                       fontSize: '22px',
-                      margin: '1px 0 0 -5px'
+                      margin: '0'
                     }}
+                    hidden={mobile}
                   >
                     {'info_outline'}
                   </div>
                 </button>
                 <button
-                  className={justMigrated ? 'button blink' : 'button'}
+                  className={!justMigrated && resolver !== ccip2Contract ? 'button blink' : 'button'}
                   style={{
                     width: '50px',
-                    margin: !mobile ? '-7% 0 0 50%' : '-3% 0 0 0',
+                    margin: !mobile ? '-7% 0 0 52%' : '-3% 0 0 0',
                   }}
                   onClick={() => migrate()}
                   data-tooltip='Migrate Resolver'
@@ -726,24 +750,25 @@ export default function Profile() {
               </div>
               {/* IMPORT */}
               <div
-                className='flex-column'
+                className={!mobile ? 'flex-column' : 'flex-row'}
                 style={{
-                  margin: '0 0 0 90.75%'
+                  margin: !mobile ? '0 0 0 90.75%' : '-9.5% 0 0 60.75%'
                 }}
               >
                 <button
                   className="button-tiny"
-                  data-tooltip={meta.resolver === ccip2Contract ? (canUse ? `Import ENS records` : `Please use pro client`) : `Resolver is not migrated`}
+                  data-tooltip={meta.resolver === ccip2Contract ? (canUse && !unauthorised() ? `Import ENS records` : (unauthorised() ? `Not Authorised` : `Please use pro client`)) : `Resolver is not migrated`}
                   style={{
-                    marginLeft: !mobile ? '0' : '-90%',
+                    margin: !mobile ? '0' : '-90% 0 0 -90%',
                   }}
+                  hidden={mobile}
                 >
                   <div
                     className="material-icons-round smoller"
                     style={{
-                      color: meta.resolver === ccip2Contract ? (!canUse ? 'orange' : 'lightgreen') : 'orange',
+                      color: meta.resolver === ccip2Contract ? (!canUse || unauthorised() ? 'orange' : 'lightgreen') : 'orange',
                       fontSize: '22px',
-                      margin: '1px 0 0 -5px'
+                      margin: '1px 0 0 0'
                     }}
                   >
                     {'info_outline'}
@@ -755,9 +780,9 @@ export default function Profile() {
                     width: '50px',
                     margin: !mobile ? '-5% 0 0 50%' : '-3% 0 0 0',
                   }}
-                  onClick={() => setResolverModal(true)}
-                  data-tooltip='Import ENS Records'
-                  disabled={!canUse}
+                  onClick={() => justMigrated ? setResolverModalState(prevState => ({ ...prevState, modalData: meta.oldResolver, trigger: true })) : setResolverModal(true)}
+                  data-tooltip={'Import ENS Records'}
+                  disabled={!canUse || unauthorised()}
                 >
                   <span className="material-icons-round micon">download</span>
                 </button>
@@ -791,7 +816,7 @@ export default function Profile() {
               rel="noopener noreferrer"
               style={{ color: '#ff2600' }}
             >
-              <h1 style={{ fontSize: '24px' }}>
+              <h1 style={{ fontSize: '20px' }}>
                 NAMESYS PRO <span className="material-icons micon">settings</span>
               </h1>
               <p>NameSys Pro Client</p>
@@ -803,7 +828,7 @@ export default function Profile() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <h1 style={{ fontSize: '24px' }}>
+              <h1 style={{ fontSize: '20px' }}>
                 DOCS <span className="material-icons micon">library_books</span>
               </h1>
               <p>Learn More</p>
@@ -815,7 +840,7 @@ export default function Profile() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <h1 style={{ fontSize: '24px' }}>
+              <h1 style={{ fontSize: '20px' }}>
                 CODE <span className="material-icons micon">developer_mode</span>
               </h1>
               <p>Source Codes</p>

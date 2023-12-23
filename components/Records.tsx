@@ -9,6 +9,7 @@ import {
 } from 'wagmi'
 
 interface Record {
+  header: string,
   id: string
   value: string
   type: string
@@ -36,6 +37,27 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const { width, height } = useWindowDimensions() // Get window dimensions
 
+  // Whether connector is authorised to write
+  function unauthorised() {
+    return !_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) || meta.resolver !== constants.ccip2[meta.chainId === 5 ? 0 : 1]
+  }
+
+  // Gets live value of update
+  function getVal(id: string) {
+    return inputValue[inputValue.findIndex((_record) => _record.id === id)].new
+  }
+
+  // Counts live values of update
+  function countVal() {
+    return inputValue.filter(_record => constants.isGoodValue(_record.id, _record.new)).length
+  }
+
+  // Whether connector can manage
+  function canManage() {
+    return !_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager)
+  }
+  !_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager)
+
   // INIT
   React.useEffect(() => {
     if (isMobile || (width && width < 1300)) {
@@ -44,7 +66,6 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height])
 
-  // INIT
   React.useEffect(() => {
     handleModalData(inputValue)
     handleTrigger(true)
@@ -65,99 +86,188 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
   }
 
   return (
-    <div className={!mobile ? styles.grid : 'flex-column'}>
-      {records.map((record) => (
-        <div key={record.path} className={!mobile ? styles.arrange : 'flex-column'}>
-          <div className='flex-sans-align'>
-            <div className='flex-row-sans-justify'>
-              <h1
-                style={{
-                  fontFamily: 'Spotnik',
-                  fontSize: '17px',
-                  color: 'skyblue',
-                  marginBottom: '5px'
-                }}
-              >
-                {record.id}
-              </h1>
-              <button
-                className="button-tiny"
-                onClick={() => {
-                  setHelpModal(true)
-                  setHelp(`<span>${record.help}</span>`)
-                }}
-                data-tooltip={'Enlighten Me'}
-              >
-                <div
-                  className="material-icons-round smol"
-                  style={{
-                    color: 'cyan',
-                    marginLeft: '5px'
-                  }}
-                >
-                  info_outline
-                </div>
-              </button>
-            </div>
-            <div className='flex-row'>
-              <input
-                id={`${record.id}`}
-                key='0'
-                placeholder={record.value}
-                type='text'
-                value={!_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) || meta.resolver === constants.ccip2[meta.chainId === 5 ? 0 : 1] ? inputValue[inputValue.findIndex((_record) => _record.id === record.id)].new : record.value}
-                onChange={(e) => {
-                  update(record.id, e.target.value)
-                }}
-                disabled={!_Wallet_ || ((!meta.wrapped && _Wallet_ !== meta.owner) && (meta.wrapped && _Wallet_ !== meta.manager)) || meta.resolver !== constants.ccip2[meta.chainId === 5 ? 0 : 1]}
-                style={{
-                  background: '#361a17',
-                  outline: 'none',
-                  border: 'none',
-                  padding: '5px 30px 5px 5px',
-                  borderRadius: '3px',
-                  fontFamily: 'SF Mono',
-                  letterSpacing: '-0.5px',
-                  fontWeight: '400',
-                  fontSize: '14px',
-                  width: '400px',
-                  wordWrap: 'break-word',
-                  textAlign: 'left',
-                  color: record.value !== 'loading...' ? 'lightgreen' : hue,
-                  cursor: 'copy'
-                }}
-              />
+    <div className='flex-column'>
+      <div>
+        <button
+          className="button flex-row emphasis"
+          style={{
+            alignSelf: 'flex-end',
+            height: '25px',
+            width: 'auto',
+            marginBottom: '6px',
+            marginTop: '-31px'
+          }}
+          disabled={countVal() < 2}
+          hidden={countVal() < 2}
+          onClick={() => {
+          }}
+          data-tooltip={'Write Record'}
+        >
+          <div>
+            {'Edit All'}
+          </div>
+          <div
+            className="material-icons-round smol"
+            style={{
+              color: 'white'
+            }}
+          >
+            edit
+          </div>
+        </button>
+      </div>
+      <div className={!mobile ? styles.grid : 'flex-column'}>
+        {records.map((record) => (
+          <div key={record.path} 
+            className={!mobile ? styles.arrange : 'flex-column'}
+            style={{
+              marginTop: !mobile ? '0' : '10px'
+            }}
+          >
+            <div className='flex-sans-align'>
               <div
-                id={`${record.id}-${record.type}`}
-                className="material-icons-round"
+                className='flex-row-sans-justify'
                 style={{
-                  fontSize: '22px',
-                  fontWeight: '700',
-                  margin: '0 0 0 -25px',
-                  color: (!record.loading && record.value) ? 'lightgreen' : 'white',
-                  cursor: 'copy',
-                  opacity: inputValue[inputValue.findIndex((_record) => _record.id === record.id)].new !== '' || !record.value ? '0' : '1'
+                  justifyContent: 'space-between'
                 }}
-                onClick={() => constants.copyToClipboard(`${record.value}`, `${record.id}`, `${record.id}-${record.type}`)}
               >
-                {!record.loading ? 'content_copy' : 'hourglass_top'}
+                <div className='flex-row-sans-justify'>
+                  <h1
+                    style={{
+                      fontFamily: 'Spotnik',
+                      fontSize: '17px',
+                      color: 'skyblue',
+                      marginBottom: '5px'
+                    }}
+                  >
+                    {record.header}
+                  </h1>
+                  <button
+                    className="button-tiny"
+                    onClick={() => {
+                      setHelpModal(true)
+                      setHelp(`<span>${record.help}</span>`)
+                    }}
+                    data-tooltip={'Enlighten Me'}
+                  >
+                    <div
+                      className="material-icons-round smol"
+                      style={{
+                        color: 'cyan',
+                        marginLeft: '5px'
+                      }}
+                    >
+                      info_outline
+                    </div>
+                  </button>
+                  <button
+                    className="button-tiny"
+                    onClick={() => { }}
+                    data-tooltip={
+                      getVal(record.id) && constants.isGoodValue(record.id, getVal(record.id)) ? 'Legit Value' : (!getVal(record.id) ? '' : 'Bad Value')
+                    }
+                  >
+                    <div
+                      className="material-icons-round smol"
+                      style={{
+                        color: getVal(record.id) && constants.isGoodValue(record.id, getVal(record.id)) ? 'yellowgreen' : (!getVal(record.id) ? 'transparent' : 'orangered'),
+                        marginLeft: '5px'
+                      }}
+                    >
+                      {getVal(record.id) && constants.isGoodValue(record.id, getVal(record.id)) ? 'check_circle_outline' : 'info_outline'}
+                    </div>
+                  </button>
+                </div>
+                <div>
+                  <button
+                    className="button flex-row"
+                    style={{
+                      alignSelf: 'flex-end',
+                      height: '25px',
+                      width: 'auto',
+                      marginBottom: '6px',
+                    }}
+                    disabled={!constants.isGoodValue(record.id, getVal(record.id))}
+                    hidden={!constants.isGoodValue(record.id, getVal(record.id)) || countVal() > 1}
+                    onClick={() => {
+
+                    }}
+                    data-tooltip={'Write Record'}
+                  >
+                    <div>
+                      {'Edit'}
+                    </div>
+                    <div
+                      className="material-icons-round smol"
+                      style={{
+                        color: 'white'
+                      }}
+                    >
+                      edit
+                    </div>
+                  </button>
+                </div>
+              </div>
+              <div className='flex-row'>
+                <input
+                  id={`${record.id}`}
+                  key='0'
+                  placeholder={record.value}
+                  type='text'
+                  value={canManage() || meta.resolver === constants.ccip2[meta.chainId === 5 ? 0 : 1] ? getVal(record.id) : record.value}
+                  onChange={(e) => {
+                    update(record.id, e.target.value)
+                  }}
+                  disabled={unauthorised()}
+                  style={{
+                    background: '#361a17',
+                    outline: 'none',
+                    border: 'none',
+                    padding: '5px 30px 5px 5px',
+                    borderRadius: '3px',
+                    fontFamily: 'SF Mono',
+                    letterSpacing: '-0.5px',
+                    fontWeight: '400',
+                    fontSize: '14px',
+                    width: '400px',
+                    wordWrap: 'break-word',
+                    textAlign: 'left',
+                    color: record.value !== 'loading...' && constants.isGoodValue(record.id, getVal(record.id)) ? 'lightgreen' : hue,
+                    cursor: 'copy'
+                  }}
+                />
+                <div
+                  id={`${record.id}-${record.type}`}
+                  className="material-icons-round"
+                  style={{
+                    fontSize: '22px',
+                    fontWeight: '700',
+                    margin: '0 0 0 -25px',
+                    color: (!record.loading && record.value) ? 'lightgreen' : 'white',
+                    cursor: 'copy',
+                    opacity: getVal(record.id) !== '' || !record.value ? '0' : '1'
+                  }}
+                  onClick={() => constants.copyToClipboard(`${record.value}`, `${record.id}`, `${record.id}-${record.type}`)}
+                >
+                  {!record.loading ? 'content_copy' : 'hourglass_top'}
+                </div>
               </div>
             </div>
           </div>
+        ))}
+        <div id="modal">
+          <Help
+            color={'cyan'}
+            icon={'info'}
+            onClose={() => setHelpModal(false)}
+            show={helpModal}
+            position={''}
+            children={help}
+            handleModalData={function (data: string | undefined): void { throw new Error() }}
+            handleTrigger={function (data: boolean): void { throw new Error() }}
+          >
+          </Help>
         </div>
-      ))}
-      <div id="modal">
-        <Help
-          color={'cyan'}
-          icon={'info'}
-          onClose={() => setHelpModal(false)}
-          show={helpModal}
-          position={''}
-          children={help}
-          handleModalData={function (data: string | undefined): void { throw new Error() }}
-          handleTrigger={function (data: boolean): void { throw new Error() }}
-        >
-        </Help>
       </div>
     </div>
   )
