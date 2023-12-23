@@ -9,6 +9,7 @@ import * as constants from '../utils/constants'
 import { isMobile } from 'react-device-detect'
 import Loading from '../components/LoadingColors'
 import { AbiItem } from 'web3-utils'
+import { KEYGEN } from '../utils/keygen'
 import Records from '../components/Records'
 import * as ensContent from '../utils/contenthash'
 import ResolverModal from '../components/ResolverModal'
@@ -17,9 +18,9 @@ import {
   useAccount,
   useFeeData,
   useContractWrite,
-  useSignMessage,
   useWaitForTransaction,
-  useContractRead
+  useContractRead,
+  useSignMessage
 } from 'wagmi'
 import Web3 from 'web3'
 
@@ -37,6 +38,7 @@ export default function Profile() {
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [found, setFound] = React.useState(false) // Set name registered or not status
   const [color, setColor] = React.useState('lightgreen') // Set color
+  const [signer, setSigner] = React.useState(['', '']) // Set signer keypair [priv, pub]
   const [cache, setCache] = React.useState(constants.ensRecords) // Set cache
   const [message, setMessage] = React.useState('Loading') // Set message to display
   const [justMigrated, setJustMigrated] = React.useState(false) // Set migrated flag
@@ -49,11 +51,11 @@ export default function Profile() {
   const [tokenIDWrapper, setTokenIDWrapper] = React.useState('') // Set Token ID of wrapped name
   const [loading, setLoading] = React.useState(true) // Loading Records marker
   const [resolverModalState, setResolverModalState] = React.useState<constants.MainBodyState>(modalTemplate) // Gateway modal state
+  const [recordsState, setRecordsState] = React.useState<constants.MainBodyState>(modalTemplate) // Records body state
 
   // Variables
   const chain = process.env.NEXT_PUBLIC_NETWORK === 'mainnet' ? '1' : '5'
   const { address: _Wallet_ } = useAccount()
-  const recoveredAddress = React.useRef<string>()
   const ccip2Contract = constants.ccip2[chain === '1' ? 1 : 0]
   const ccip2Config = constants.ccip2Config[chain === '1' ? 1 : 0]
   const apiKey = chain === '1' ? process.env.NEXT_PUBLIC_ALCHEMY_ID_MAINNET : process.env.NEXT_PUBLIC_ALCHEMY_ID_GOERLI
@@ -61,6 +63,7 @@ export default function Profile() {
   const provider = new ethers.AlchemyProvider(network, apiKey)
   const alchemyEndpoint = `https://eth-${network}.g.alchemy.com/v2/` + apiKey
   const web3 = new Web3(alchemyEndpoint)
+  const recoveredAddress = React.useRef<string>()
   const caip10 = `eip155:${chain}:${_Wallet_}`  // CAIP-10
   const origin = `eth:${_Wallet_ || constants.zeroAddress}`
   const PORT = process.env.NEXT_PUBLIC_PORT
@@ -73,6 +76,14 @@ export default function Profile() {
   // Handle Resolver modal trigger
   const handleResolverTrigger = (trigger: boolean) => {
     setResolverModalState(prevState => ({ ...prevState, trigger: trigger }))
+  }
+  // Handle Records body data return
+  const handleRecordsData = (data: string) => {
+    setRecordsState(prevState => ({ ...prevState, modalData: data }))
+  }
+  // Handle Records body trigger
+  const handleRecordsTrigger = (trigger: boolean) => {
+    setRecordsState(prevState => ({ ...prevState, trigger: trigger }))
   }
 
   // FUNCTIONS
@@ -456,19 +467,6 @@ export default function Profile() {
     }
   }
 
-  // Wagmi Signature hook
-  const {
-    data: signature,
-    error: signError,
-    isLoading: signLoading,
-    signMessage
-  } = useSignMessage({
-    onSuccess(data, variables) {
-      const address = ethers.verifyMessage(variables.message, data)
-      recoveredAddress.current = address
-    },
-  })
-
   /// ENS Domain Metadata
   // Read Legacy ENS Registry for ENS domain Owner
   const { data: _OwnerLegacy_, isLoading: legacyOwnerLoading, isError: legacyOwnerError } = useContractRead({
@@ -530,6 +528,77 @@ export default function Profile() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_OwnerLegacy_, _ManagerLegacy_, _OwnerWrapped_])
+
+  // Signature S_SIGNER statement; S_SIGNER(K_WALLET) [Signer Keygen]
+  // S_SIGNER is not recovered on-chain; no need for buffer prepend and hashing of message required to sign
+  function statementSignerKey(extradata: string) {
+    let _toSign = `Requesting Signature To Generate ENS Records Signer\n\nOrigin: ${ENS}\nKey Type: secp256k1\nExtradata: ${extradata}\nSigned By: ${caip10}`
+    let _digest = _toSign
+    return _digest
+  }
+
+  // Parse Records to write
+  React.useEffect(() => {
+    if (recordsState.trigger && recordsState.modalData) {
+      let _allRecords = JSON.parse(recordsState.modalData)
+      const SIGN_SIGNER = async () => {
+        signMessage({
+          message: statementSignerKey(
+            ethers.keccak256(ethers.solidityPacked(
+              ['bytes32', 'address'],
+              [
+                ethers.keccak256(ethers.solidityPacked(['string'], [constants.randomString(10)])),
+                _Wallet_
+              ]
+            ))
+          )
+        })
+      }
+      SIGN_SIGNER()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordsState])
+
+  // Wagmi Signature hook
+  const {
+    data: signature,
+    error: signError,
+    isLoading: signLoading,
+    signMessage
+  } = useSignMessage({
+    onSuccess(data, variables) {
+      const address = ethers.verifyMessage(variables.message, data)
+      recoveredAddress.current = address
+    },
+  })
+
+  // Sets signature from Wagmi signMessage() as S_IPNS(K_WALLET)
+  React.useEffect(() => {
+    if (signature) {
+      setLoading(true)
+      setMessage('Generating Signer')
+      const keygen = async () => {
+        const _origin = ENS
+        const __keypair = await KEYGEN(_origin, caip10, signature, constants.randomString(10))
+        setSigner(__keypair)
+        setMessage('Signer Generated')
+      }
+      keygen()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature])
+
+  // Sets signature status
+  React.useEffect(() => {
+    if (signLoading) {
+      setMessage('Waiting for Signature')
+    }
+    if (signError) {
+      setMessage('Signature Failed')
+      setLoading(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMigrateSuccess, txSuccess, txLoading, txError])
 
   return (
     <main className='flex-column'>
@@ -790,8 +859,8 @@ export default function Profile() {
               <div>
                 <Records
                   meta={meta}
-                  handleModalData={function (data: string | undefined): void { }}
-                  handleTrigger={function (data: boolean): void { }}
+                  handleModalData={handleRecordsData}
+                  handleTrigger={handleRecordsTrigger}
                   records={Object.values(records)}
                   hue={!_Wallet_ || ((!meta.wrapped && _Wallet_ !== meta.owner) && (meta.wrapped && _Wallet_ !== meta.manager)) ? 'white' : 'orange'}
                 />

@@ -46,6 +46,19 @@ const dogeRegex = /^D[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{24,33}$/
 const solRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
 const atomRegex = /^cosmos1[a-zA-Z0-9]{38}$/
 
+// Random string generator
+export function randomString(length: number) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
+
 // ENS Records
 export const ensRecords = {
   contenthash: '',

@@ -24,7 +24,7 @@ interface RecordsContainerProps {
   meta: any
   records: Record[]
   hue: string
-  handleModalData: (data: any) => void
+  handleModalData: (data: string) => void
   handleTrigger: (data: boolean) => void
 }
 
@@ -66,11 +66,12 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height])
 
-  React.useEffect(() => {
-    handleModalData(inputValue)
+  const handleSubmit = (e: { preventDefault: () => void; }) => {
+    console.log('HERE')
+    handleModalData(JSON.stringify(inputValue))
     handleTrigger(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue])
+    e.preventDefault()
+  }
 
   // Update values
   async function update(type: string, value: string) {
@@ -99,8 +100,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
           }}
           disabled={countVal() < 2}
           hidden={countVal() < 2}
-          onClick={() => {
-          }}
+          onClick={handleSubmit}
           data-tooltip={'Write Record'}
         >
           <div>
@@ -118,7 +118,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
       </div>
       <div className={!mobile ? styles.grid : 'flex-column'}>
         {records.map((record) => (
-          <div key={record.path} 
+          <div key={record.path}
             className={!mobile ? styles.arrange : 'flex-column'}
             style={{
               marginTop: !mobile ? '0' : '10px'
@@ -189,9 +189,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
                     }}
                     disabled={!constants.isGoodValue(record.id, getVal(record.id))}
                     hidden={!constants.isGoodValue(record.id, getVal(record.id)) || countVal() > 1}
-                    onClick={() => {
-
-                    }}
+                    onClick={handleSubmit}
                     data-tooltip={'Write Record'}
                   >
                     <div>
