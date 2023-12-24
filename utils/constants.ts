@@ -79,7 +79,9 @@ export const meta = {
   manager: zeroAddress,
   wrapped: false,
   chainId: process.env.NEXT_PUBLIC_NETWORK === 'goerli' ? 5 : 1,
-  oldResolver: ''
+  oldResolver: '',
+  signer: '',
+  signature: ''
 }
 
 let network = process.env.NEXT_PUBLIC_NETWORK
@@ -181,6 +183,7 @@ export const records = {
     loading: true,
     ens: '',
     new: '',
+    signature: '',
     help: 'Your ENS Contenthash'
   },
   "addr": {
@@ -193,6 +196,7 @@ export const records = {
     loading: true,
     ens: '',
     new: '',
+    signature: '',
     help: 'Your Ethereum Address'
   },
   "avatar": {
@@ -205,6 +209,7 @@ export const records = {
     loading: true,
     ens: '',
     new: '',
+    signature: '',
     help: 'Link to Your Avatar'
   },
   "url": {
@@ -217,6 +222,7 @@ export const records = {
     loading: true,
     ens: '',
     new: '',
+    signature: '',
     help: 'Your URL Text Record'
   },
   "description": {
@@ -229,10 +235,11 @@ export const records = {
     loading: true,
     ens: '',
     new: '',
+    signature: '',
     help: 'Your Short Description'
   },
   "com.twitter": {
-    id: 'twitter',
+    id: 'com.twitter',
     header: 'X | Twitter',
     value: 'loading...',
     type: 'text',
@@ -241,10 +248,11 @@ export const records = {
     loading: true,
     ens: '',
     new: '',
+    signature: '',
     help: 'Your Twitter/X Handle Without @'
   },
   "com.discord": {
-    id: 'discord',
+    id: 'com.discord',
     header: 'Discord',
     value: 'loading...',
     type: 'text',
@@ -253,10 +261,11 @@ export const records = {
     loading: true,
     ens: '',
     new: '',
+    signature: '',
     help: 'Your Discord Username'
   },
   "com.github": {
-    id: 'github',
+    id: 'com.github',
     header: 'Github',
     value: 'loading...',
     type: 'text',
@@ -265,6 +274,7 @@ export const records = {
     loading: true,
     ens: '',
     new: '',
+    signature: '',
     help: 'Your GitHub Username/ID'
   }
 }

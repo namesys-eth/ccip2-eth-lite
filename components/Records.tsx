@@ -67,7 +67,6 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
   }, [width, height])
 
   const handleSubmit = (e: { preventDefault: () => void; }) => {
-    console.log('HERE')
     handleModalData(JSON.stringify(inputValue))
     handleTrigger(true)
     e.preventDefault()

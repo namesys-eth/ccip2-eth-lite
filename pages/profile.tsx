@@ -12,6 +12,7 @@ import { AbiItem } from 'web3-utils'
 import { KEYGEN } from '../utils/keygen'
 import Records from '../components/Records'
 import * as ensContent from '../utils/contenthash'
+import * as addrEncode from '@ensdomains/address-encoder'
 import ResolverModal from '../components/ResolverModal'
 import { useWindowDimensions } from '../hooks/useWindowDimensions'
 import {
@@ -37,6 +38,7 @@ export default function Profile() {
   const [resolver, setResolver] = React.useState('') // Get ENS Resolver for query
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [found, setFound] = React.useState(false) // Set name registered or not status
+  const [sigCount, setSigCount] = React.useState(0) // Set signature count
   const [color, setColor] = React.useState('lightgreen') // Set color
   const [signer, setSigner] = React.useState(['', '']) // Set signer keypair [priv, pub]
   const [cache, setCache] = React.useState(constants.ensRecords) // Set cache
@@ -102,6 +104,52 @@ export default function Profile() {
   // Whether connector is authorised to write
   function unauthorised() {
     return !_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) || meta.resolver !== constants.ccip2[meta.chainId === 5 ? 0 : 1]
+  }
+
+  // Counts live values of update
+  function countVal(records: any) {
+    return records.filter((_record: any) => constants.isGoodValue(_record.id, _record.new)).length
+  }
+
+  // Sign a record
+  async function signRecord(records: any, _signer: any, _type: string) {
+    if (records[_type].new) {
+      return await _signer.signMessage(statementRecords(records[_type].new, genExtradata(_type, records[_type].new), signer[0]))
+    } else {
+      return ''
+    }
+  }
+
+  // Generate extradata for S_RECORDS(K_SIGNER)
+  function genExtradata(key: string, _recordValue: string) {
+    // returns bytesToHexString(abi.encodePacked(keccak256(result)))
+    let type: string = ''
+    let _value: string = ''
+    if (['avatar', 'email', 'pubkey',
+      'com.github', 'url', 'com.twitter', 'com.discord', 'xyz.farcaster', 'nostr',
+      'zonehash'
+    ].includes(key)) {
+      type = 'string'
+      _value = _recordValue
+    }
+    if ([
+      'btc', 'ltc', 'doge', 'sol', 'atom'
+    ].includes(key)) {
+      type = 'bytes'
+      _value = `0x${addrEncode.getCoderByCoinName(key.toUpperCase()).decode(_recordValue).toString()}`
+    }
+    if (key === 'contenthash') {
+      type = 'bytes'
+      _value = ensContent.encodeContentHash(_recordValue)
+    }
+    if (key === 'addr') {
+      type = 'address'
+      _value = _recordValue
+    }
+    let _encoder = ethers.AbiCoder.defaultAbiCoder()
+    const toPack = ethers.keccak256(_encoder.encode([type], [_value]))
+    const _extradata = ethers.hexlify(ethers.solidityPacked(["bytes"], [toPack]))
+    return _extradata
   }
 
   // INIT
@@ -537,10 +585,45 @@ export default function Profile() {
     return _digest
   }
 
+  // Signature S_APPROVE statement; S_APPROVE(K_WALLET) [Approved Signature]
+  // S_APPROVE is recovered on-chain; requires buffer prepend, hashing of message and arrayifying it
+  function statementManager(signer: string) {
+    let _signer = 'eip155:' + chain + ':' + signer // Convert secp256k1 pubkey to ETH address
+    let _toSign = `Requesting Signature To Approve ENS Records Signer\n\nOrigin: ${ENS}\nApproved Signer: ${_signer}\nApproved By: ${caip10}`
+    return _toSign
+  }
+
+  // Signature S_RECORDS statement; S_RECORDS(K_SIGNER) [Record Signature]
+  // S_RECORDS is recovered on-chain; requires buffer prepend, hashing of message and arrayifying it
+  function statementRecords(recordType: string, extradata: string, signer: string) {
+    let _signer = 'eip155:' + chain + ':' + ethers.computeAddress(`0x${signer}`)
+    let _toSign = `Requesting Signature To Update ENS Record\n\nOrigin: ${ENS}\nRecord Type: ${recordType}\nExtradata: ${extradata}\nSigned By: ${_signer}`
+    return _toSign
+  }
+
+  // Wagmi Signature hook
+  const {
+    data: signature,
+    error: signError,
+    isLoading: signLoading,
+    signMessage
+  } = useSignMessage({
+    onSuccess(data, variables) {
+      const address = ethers.verifyMessage(variables.message, data)
+      recoveredAddress.current = address
+    },
+  })
+
   // Parse Records to write
   React.useEffect(() => {
     if (recordsState.trigger && recordsState.modalData) {
       let _allRecords = JSON.parse(recordsState.modalData)
+      let _records: any = { ...records }
+      for (var i = 0; i < _allRecords.length; i++) {
+        _records[_allRecords[i].id] = _allRecords[i]
+      }
+      setRecords(_records)
+      setSigCount(1)
       const SIGN_SIGNER = async () => {
         signMessage({
           message: statementSignerKey(
@@ -559,46 +642,95 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recordsState])
 
-  // Wagmi Signature hook
-  const {
-    data: signature,
-    error: signError,
-    isLoading: signLoading,
-    signMessage
-  } = useSignMessage({
-    onSuccess(data, variables) {
-      const address = ethers.verifyMessage(variables.message, data)
-      recoveredAddress.current = address
-    },
-  })
-
   // Sets signature from Wagmi signMessage() as S_IPNS(K_WALLET)
   React.useEffect(() => {
     if (signature) {
-      setLoading(true)
-      setMessage('Generating Signer')
-      const keygen = async () => {
-        const _origin = ENS
-        const __keypair = await KEYGEN(_origin, caip10, signature, constants.randomString(10))
-        setSigner(__keypair)
-        setMessage('Signer Generated')
+      if (sigCount === 1 && !signer[0]) {
+        setMessage('Generating Signer')
+        const keygen = async () => {
+          const _origin = ENS
+          const __keypair = await KEYGEN(_origin, caip10, signature, constants.randomString(10))
+          setSigner(__keypair)
+          let _meta = { ...meta }
+          _meta.signer = ethers.computeAddress(`0x${__keypair[0]}`)
+          setMeta(_meta)
+          setMessage('Signer Generated')
+        }
+        keygen()
+      } else if (sigCount === 2) {
+        setMessage('Signer Approved')
+        let _meta = { ...meta }
+        _meta.signature = signature
+        setMeta(_meta)
+        // Sign Records
+        setMessage('Signing Records')
+        const _signer = new ethers.Wallet('0x' + signer[0], provider)
+        let _records = { ...records }
+        const _signRecords = async () => {
+          await signRecord(_records, _signer, 'addr').then(async (sig) => {
+            _records.addr.signature = sig
+            await signRecord(_records, _signer, 'contenthash').then(async (sig) => {
+              _records.contenthash.signature = sig
+              await signRecord(_records, _signer, 'avatar').then(async (sig) => {
+                _records.avatar.signature = sig
+                await signRecord(_records, _signer, 'url').then(async (sig) => {
+                  _records.url.signature = sig
+                  await signRecord(_records, _signer, 'description').then(async (sig) => {
+                    _records.description.signature = sig
+                    await signRecord(_records, _signer, 'com.twitter').then(async (sig) => {
+                      _records['com.twitter'].signature = sig
+                      await signRecord(_records, _signer, 'com.discord').then(async (sig) => {
+                        _records['com.discord'].signature = sig
+                        await signRecord(_records, _signer, 'com.github').then(async (sig) => {
+                          _records['com.github'].signature = sig
+                          setRecords(_records)
+                          setSigCount(0)
+                          setLoading(false)
+                          setSigner(['', ''])
+                        })
+                      })
+                    })
+                  })
+                })
+              })
+            })
+          })
+        }
+        _signRecords()
       }
-      keygen()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signature])
+  }, [signature, sigCount, signer])
+
+  // Sets signature from Wagmi signMessage() as S_IPNS(K_WALLET)
+  React.useEffect(() => {
+    if (signer[0]) {
+      setMessage('Approving Signer')
+      setSigCount(2)
+      const approval = async () => {
+        signMessage({
+          message: statementManager(
+            ethers.computeAddress(`0x${signer[1]}`)
+          )
+        })
+      }
+      approval()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signer])
 
   // Sets signature status
   React.useEffect(() => {
     if (signLoading) {
-      setMessage('Waiting for Signature')
+      setLoading(true)
+      setMessage(sigCount === 1 ? 'Waiting for Signer Signature' : 'Waiting for Approval Signature')
     }
     if (signError) {
       setMessage('Signature Failed')
       setLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMigrateSuccess, txSuccess, txLoading, txError])
+  }, [signLoading, signError, sigCount])
 
   return (
     <main className='flex-column'>
@@ -623,6 +755,22 @@ export default function Profile() {
               }}
             >
               {message}
+            </span>
+          </div>
+          <div
+            style={{
+              marginTop: '20px'
+            }}
+          >
+            <span
+              style={{
+                color: 'white',
+                fontSize: '24px',
+                fontWeight: '700',
+                fontFamily: 'SF Mono'
+              }}
+            >
+              {sigCount > 0 ? `${sigCount}/2` : ''}
             </span>
           </div>
         </>
@@ -657,7 +805,7 @@ export default function Profile() {
           <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 0' }}>
             <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 20px' }}>
               <img
-                src={records.avatar.source || '/profile.png'}
+                src={records.avatar.value || '/profile.png'}
                 onError={(event) => {
                   (event.target as any).onerror = null;
                   (event.target as any).src = '/profile.png';
@@ -673,83 +821,113 @@ export default function Profile() {
                 }}
               >
                 <div
-                  className={!mobile ? 'flex-column-sans-align' : 'flex-column'}
+                  className={!mobile ? 'flex-row' : 'flex-row'}
                   style={{
                     margin: !mobile ? '-9.375% 0 0 -41%' : '0 0 0 0',
                     color: '#ff2600'
                   }}
                 >
-                  <div className='flex-row-sans-justify'>
-                    <span>{'Migrated'}</span>
-                    &nbsp;
-                    <button
-                      className="button-tiny"
-                      data-tooltip={meta.resolver === ccip2Contract ? (canUse ? `Resolver is migrated` : `Using NameSys with IPFS. Please use pro client`) : `Resolver is not migrated`}
-                    >
-                      <div
-                        className="material-icons-round smoller"
-                        style={{
-                          color: meta.resolver === ccip2Contract ? (canUse ? 'lightgreen' : 'orange') : 'orange',
-                          fontSize: '22px',
-                          margin: '1px 0 0 -5px'
-                        }}
-                      >
-                        {meta.resolver === ccip2Contract ? 'done' : 'close'}
-                      </div>
-                    </button>
+                  <div
+                    className="flex-column"
+                    style={{
+                      alignItems: 'flex-end',
+                      lineHeight: '20px',
+                      marginTop: '-5px'
+                    }}
+                  >
+                    <div>
+                      <span>{'Migrated'}</span>
+                    </div>
+                    <div>
+                      <span>{'Resolver'}</span>
+                    </div>
+                    <div>
+                      <span>{'Owner'}</span>
+                    </div>
+                    <div>
+                      <span>{'Manager'}</span>
+                    </div>
+                    <div>
+                      <span>{'Wrapped'}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span>{'Resolver'}</span>
-                    &nbsp;
-                    <span
-                      className='mono'
-                      id="metaResolver"
-                      onClick={() => constants.copyToClipboard(meta.resolver, "none", "metaResolver")}
-                    >
-                      {mobile ? constants.truncateHexString(meta.resolver) : meta.resolver}
-                    </span>
-                    <img
-                      src={constants.ensContracts.includes(resolver) ? 'ens.png' : (resolver === ccip2Contract ? 'logo.png' : '')}
-                      width={'15px'}
-                      style={{ margin: `0 15px -3px 7.5px` }}
-                    />
-                  </div>
-                  <div>
-                    <span>{'Owner'}</span>
-                    &nbsp;
-                    <span
-                      className='mono'
-                      id="metaOwner"
-                      onClick={() => constants.copyToClipboard(meta.owner, "none", "metaOwner")}
-                      color=''
-                    >
-                      {mobile ? constants.truncateHexString(meta.owner) : meta.owner}
-                    </span>
-                  </div>
-                  <div>
-                    <span>{'Manager'}</span>
-                    &nbsp;
-                    <span
-                      className='mono'
-                      id="metaManager"
-                      onClick={() => constants.copyToClipboard(meta.manager, "none", "metaManager")}
-                    >
-                      {mobile ? constants.truncateHexString(meta.manager) : meta.manager}
-                    </span>
-                  </div>
-                  <div className='flex-row-sans-justify'>
-                    <span>{'Wrapped'}</span>
-                    &nbsp;
-                    <span
-                      className='material-icons'
+                  <div
+                    style={{
+                      marginLeft: '5px',
+                      lineHeight: '23.5px',
+                    }}
+                  >
+                    <div
+                      className='flex-column'
                       style={{
-                        color: 'white',
-                        fontSize: '21px'
+                        alignItems: 'flex-start',
+                        marginTop: '1px'
                       }}
                     >
-                      {meta.wrapped ? 'done' : 'close'}
-                    </span>
+                      <button
+                        className="button-tiny"
+                        style={{
+                          marginBottom: '-2px'
+                        }}
+                        data-tooltip={meta.resolver === ccip2Contract ? (canUse ? `Resolver is migrated` : `Using NameSys with IPFS. Please use pro client`) : `Resolver is not migrated`}
+                      >
+                        <div
+                          className="material-icons-round smoller"
+                          style={{
+                            color: meta.resolver === ccip2Contract ? (canUse ? 'lightgreen' : 'orange') : 'orange',
+                            fontSize: '22px',
+                          }}
+                        >
+                          {meta.resolver === ccip2Contract ? 'done' : 'close'}
+                        </div>
+                      </button>
+                    </div>
+                    <div style={{ margin: '0 0 2px 0' }}>
+                      <span
+                        className='mono'
+                        id="metaResolver"
+                        onClick={() => constants.copyToClipboard(meta.resolver, "none", "metaResolver")}
+                      >
+                        {mobile ? constants.truncateHexString(meta.resolver) : meta.resolver}
+                      </span>
+                      <img
+                        src={constants.ensContracts.includes(resolver) ? 'ens.png' : (resolver === ccip2Contract ? 'logo.png' : '')}
+                        width={'15px'}
+                        style={{ margin: `0 15px -3px 7.5px` }}
+                      />
+                    </div>
+                    <div style={{ margin: '-5px 0 1px 0' }}>
+                      <span
+                        className='mono'
+                        id="metaOwner"
+                        onClick={() => constants.copyToClipboard(meta.owner, "none", "metaOwner")}
+                        color=''
+                      >
+                        {mobile ? constants.truncateHexString(meta.owner) : meta.owner}
+                      </span>
+                    </div>
+                    <div style={{ margin: '-3px 0 1px 0' }}>
+                      <span
+                        className='mono'
+                        id="metaManager"
+                        onClick={() => constants.copyToClipboard(meta.manager, "none", "metaManager")}
+                      >
+                        {mobile ? constants.truncateHexString(meta.manager) : meta.manager}
+                      </span>
+                    </div>
+                    <div style={{ margin: '0px 0 2px 0' }}>
+                      <span
+                        className='material-icons'
+                        style={{
+                          color: 'white',
+                          fontSize: '21px'
+                        }}
+                      >
+                        {meta.wrapped ? 'done' : 'close'}
+                      </span>
+                    </div>
                   </div>
+
                 </div>
               </div>
             </div>
