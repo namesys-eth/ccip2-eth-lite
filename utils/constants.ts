@@ -15,8 +15,23 @@ import { AbiItem } from 'web3-utils'
 import * as ensContent from '../utils/contenthash'
 import axios from 'axios'
 
+export const modalTemplate = {
+  modalData: '',
+  trigger: false
+}
+
+export const modalSaltTemplate = {
+  modalData: undefined,
+  trigger: false
+}
+
 export interface MainBodyState {
   modalData: string
+  trigger: boolean
+}
+
+export interface MainSaltState {
+  modalData: string | undefined
   trigger: boolean
 }
 
@@ -170,6 +185,24 @@ export const ccip2Config = [
     contractInterface: ccip2Interface[1]
   }
 ]
+
+export type RecordsType = {
+  [key: string]: recordType
+}
+
+export type recordType = {
+  header: string,
+  id: string
+  value: string
+  type: string
+  path: string
+  source: string
+  loading: boolean
+  new: string
+  help: string
+  ens: string
+  signature: string
+}
 
 // ENS Domain's Records
 export const records = {
@@ -462,3 +495,4 @@ export function isContenthash(value: string) {
     (prefixOnion === 'onion://' && onionRegex.test(value.substring(8,))) // Check Onion v2 & v3
   )
 }
+

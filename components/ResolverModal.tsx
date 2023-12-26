@@ -22,7 +22,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
   React.useEffect(() => {
     setBrowser(true)
     setInputValue(children)
-  }, [])
+  }, [children])
 
   const handleCloseClick = (e: { preventDefault: () => void; }) => {
     handleModalData('')
@@ -103,7 +103,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
           <input
             id='keyid'
             key='0'
-            placeholder={inputValue || 'enter source resolver address'}
+            placeholder={inputValue || '0x'}
             type='text'
             value={inputValue}
             onChange={(e) => {
@@ -157,10 +157,10 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
           onClose={() => setHelpModal(false)}
           show={helpModal}
           position={''}
-          children={help}
           handleModalData={function (data: string | undefined): void { throw new Error() }}
           handleTrigger={function (data: boolean): void { throw new Error() }}
         >
+          {help}
         </Help>
       </div>
     </StyledModalOverlay>

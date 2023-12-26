@@ -8,7 +8,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ghp-deploy": "touch out/.nojekyll && node postbuild/replacerGithubPages.js && git add out && git commit -S -m 'auto-commit: gh-pages' && git subtree push --prefix out origin gh-pages"
   },
   "dependencies": {
     "@ensdomains/content-hash": "^3.1.0-rc.0",
@@ -23,6 +24,7 @@
     "react": "^18",
     "react-device-detect": "^2.2.3",
     "react-dom": "^18",
+    "react-helmet": "^6.1.0",
     "styled-components": "^6.1.2",
     "viem": "^1.20.3",
     "wagmi": "^1.3.10",
@@ -35,6 +37,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "patch-package": "^8.0.0",
+    "replace-in-file": "^7.0.2",
     "typescript": "^5"
   }
 }

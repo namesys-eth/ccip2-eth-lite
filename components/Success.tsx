@@ -2,47 +2,33 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import styled from 'styled-components'
 import { isMobile } from 'react-device-detect'
-import { useWindowDimensions } from '../hooks/useWindowDimensions'
-
-interface StyledModalProps {
-  top: string;
-}
 
 interface ModalProps {
   icon: string
   color: string
   show: boolean
-  position: string
   onClose: any
   children: any
   handleModalData: (data: string | undefined) => void
   handleTrigger: (data: boolean) => void
 }
 
-const Help: React.FC<ModalProps> = ({ icon, color, show, onClose, children, position }) => {
+const Success: React.FC<ModalProps> = ({ icon, color, show, onClose, children, handleModalData, handleTrigger }) => {
   const [browser, setBrowser] = React.useState(false)
-  const { width, height } = useWindowDimensions()
-  const [mobile, setMobile] = React.useState(false)
   React.useEffect(() => {
     setBrowser(true)
   }, [])
 
-  // INIT
-  React.useEffect(() => {
-    if (isMobile || (width && width < 1300)) {
-      setMobile(true)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, height])
-
   const handleCloseClick = (e: { preventDefault: () => void; }) => {
+    handleModalData('0')
+    handleTrigger(true)
     e.preventDefault()
     onClose()
   }
 
   const modalContent = show ? (
     <StyledModalOverlay>
-      <StyledModal top={position}>
+      <StyledModal>
         <StyledModalHeader>
           <a href="#" onClick={handleCloseClick}>
             <span
@@ -61,7 +47,7 @@ const Help: React.FC<ModalProps> = ({ icon, color, show, onClose, children, posi
               className="material-icons"
               style={{
                 marginTop: '4px',
-                fontSize: '36px',
+                fontSize: '68px',
                 color: color
               }}
             >
@@ -69,6 +55,34 @@ const Help: React.FC<ModalProps> = ({ icon, color, show, onClose, children, posi
             </span>
           </StyledModalTitle>}
         <StyledModalBody dangerouslySetInnerHTML={{ __html: children }} />
+        <StyledModalBody>
+          <div
+            className="flex-row"
+            style={{
+              marginLeft: '0px'
+            }}
+          >
+            <button
+              className="button-option"
+              style={{
+                height: '35px',
+                width: '105px'
+              }}
+              onClick={handleCloseClick}
+              data-tooltip='Continue'
+            >
+              <div
+                className="flex-row"
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '700'
+                }}
+              >
+                {'OK'}&nbsp;<span className="material-icons chonk">done_all</span>
+              </div>
+            </button>
+          </div>
+        </StyledModalBody>
       </StyledModal>
     </StyledModalOverlay>
   ) : null
@@ -85,18 +99,22 @@ const Help: React.FC<ModalProps> = ({ icon, color, show, onClose, children, posi
 
 const StyledModalBody = styled.div`
   padding-top: 0px;
-  padding-left: 20px;
-  padding-right: 20px;
-  padding-bottom: 15px;
+  padding-left: ${isMobile ? '10px' : '20px'};
+  padding-right: ${isMobile ? '10px' : '20px'};
+  padding-bottom: 5px;
+  margin-top: 0px;
+  margin-left: ${isMobile ? '10px' : '20px'};
+  margin-right: ${isMobile ? '10px' : '20px'};
+  margin-bottom: ${isMobile ? '15px' : '20px'};
   display: flex;
   justify-content: center;
   height: auto;
   overflow-y: auto;
   color: white;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
-  line-height: 20px;
-  max-width: 400px;
+  line-height: 22px;
+  max-width: ${isMobile ? '400px' : '400px'};
 `
 
 const StyledModalTitle = styled.div`
@@ -114,9 +132,8 @@ const StyledModalHeader = styled.div`
   justify-content: flex-end;
 `
 
-const StyledModal = styled.div<StyledModalProps>`
-  position: fixed;
-  top: ${(props: { top: any; }) => props.top}; 
+const StyledModal = styled.div`
+  position: fixed; 
   background: rgba(66,46,40,1);
   background-size: 400% 400%;
   width: auto;
@@ -124,9 +141,8 @@ const StyledModal = styled.div<StyledModalProps>`
   border-radius: 6px;
   overflow-y: initial !important
   display: flex;
-  padding: 5px;
-  justify-content: center;
   text-align: center;
+  justify-content: center;
 `
 
 const StyledModalOverlay = styled.div`
@@ -141,4 +157,4 @@ const StyledModalOverlay = styled.div`
   background-color: rgba(0, 0, 0, 1);
 `
 
-export default Help
+export default Success

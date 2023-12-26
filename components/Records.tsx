@@ -8,17 +8,7 @@ import {
   useAccount
 } from 'wagmi'
 
-interface Record {
-  header: string,
-  id: string
-  value: string
-  type: string
-  path: string
-  source: string
-  loading: boolean
-  new: string
-  help: string
-}
+export interface Record extends constants.recordType { }
 
 interface RecordsContainerProps {
   meta: any
@@ -259,10 +249,10 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
             onClose={() => setHelpModal(false)}
             show={helpModal}
             position={''}
-            children={help}
             handleModalData={function (data: string | undefined): void { throw new Error() }}
             handleTrigger={function (data: boolean): void { throw new Error() }}
           >
+            {help}
           </Help>
         </div>
       </div>
