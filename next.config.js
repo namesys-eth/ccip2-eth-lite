@@ -1,14 +1,14 @@
 /** @type {import('next').NextConfig} */
+const env = process.env.NODE_ENV
 const nextConfig = {
 	distDir: "out",
-	output: 'export',
+	output: env === 'production' ? 'export' : 'standalone',
 	reactStrictMode: true,
 	assetPrefix: "",
 	images: {
-		loader: 'akamai',
+		loader: env === 'production' ? 'akamai' : 'default',
 		path: '',
-	},
-	webpack5: true
+	}
 }
 
 module.exports = nextConfig

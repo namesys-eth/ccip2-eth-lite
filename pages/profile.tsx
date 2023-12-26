@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { Helmet } from 'react-helmet'
+import Head from 'next/head'
 import React from 'react'
 import styles from './page.module.css'
 import './index.css'
@@ -34,7 +34,7 @@ export default function Profile() {
   const { data: gasData, isError } = useFeeData() // Current gas prices
   const { query } = router.query // Query from main page
   const { width, height } = useWindowDimensions() // Get window dimensions
-  const [ENS, setENS] = React.useState('rilxxlir.eth') // Set ENS from query
+  const [ENS, setENS] = React.useState('Lite.NameSys') // Set ENS from query
   const [resolver, setResolver] = React.useState('') // Get ENS Resolver for query
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [write, setWrite] = React.useState(false) // Sets write flag
@@ -1025,11 +1025,10 @@ export default function Profile() {
 
   return (
     <>
-      <Helmet>
+      <Head>
         <title>{`${ENS}`}</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-        <meta name="description" content="NameSys Lite" />
-      </Helmet>
+      </Head>
       <main className='flex-column'>
         <div style={{ fontFamily: 'Rajdhani' }}></div>
         <div style={{ fontFamily: 'SF Mono' }}></div>

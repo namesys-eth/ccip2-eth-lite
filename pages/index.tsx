@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { Helmet } from 'react-helmet'
+import Head from 'next/head'
 import React from 'react'
 import { useRouter } from 'next/router'
 import styles from './page.module.css'
@@ -26,11 +26,10 @@ export default function Home() {
 
   return (
     <>
-      <Helmet>
+      <Head>
         <title>NameSys Lite</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-        <meta name="description" content="NameSys Lite" />
-      </Helmet>
+      </Head>
       <main className='flex-column'>
         <div style={{ fontFamily: 'Rajdhani' }}></div>
         <div style={{ fontFamily: 'SF Mono' }}></div>
