@@ -39,7 +39,7 @@ export default function Profile() {
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [write, setWrite] = React.useState(false) // Sets write flag
   const [sigCount, setSigCount] = React.useState(0) // Set signature count
-  const [color, setColor] = React.useState('lightgreen') // Set color
+  const [color, setColor] = React.useState('lime') // Set color
   const [gas, setGas] = React.useState({}) // Sets list of gas consumption
   const [gasModal, setGasModal] = React.useState(false) // Sets gas modal state
   const [crash, setCrash] = React.useState(false) // Set crash status
@@ -521,7 +521,7 @@ export default function Profile() {
   // Sets migration state to true upon successful Transaction 1 receipt (for Ownerhash)
   React.useEffect(() => {
     if (isMigrateSuccess && txSuccess) {
-      setSuccess('<span><span style="color: lightgreen">Resolver Migrated</span>! Enjoy!</span>')
+      setSuccess('<div style="font-weight: 800"><span style="color: lime; font-size: 22px">Resolver Migrated!</span></div>')
       setSuccessModal(true)
       setMessage('Transaction Confirmed')
       setTimeout(() => {
@@ -816,7 +816,7 @@ export default function Profile() {
         setMessage('Generating Signer')
         const keygen = async () => {
           const _origin = ENS
-          const __keypair = await KEYGEN(_origin, caip10, signature, constants.randomString(10))
+          const __keypair = await KEYGEN(_origin, caip10, signature, saltModalState.modalData)
           setSigner(__keypair)
           let _meta = { ...meta }
           _meta.signer = ethers.computeAddress(`0x${__keypair[0]}`)
@@ -909,18 +909,17 @@ export default function Profile() {
       write &&
       count > 0
     ) {
+      setLoading(true)
       let encodedValues: any = {}
       let newValues: any = {}
-      let newKeys: any = {}
-      let recordsTypes: string[] = []
+      let newKeys: string[] = []
       let signatures: any = {}
       for (const key in _records) {
         if (_records.hasOwnProperty(key) && _records[key].new !== '') {
           newValues[key] = _records[key].new
           encodedValues[key] = encodeValue(key, _records[key].new, _records[key].signature, meta.signature, meta.signer)
           signatures[key] = _records[key].signature
-          newKeys[key] = key
-          recordsTypes.push(key)
+          newKeys.push(key)
         }
       }
       // Generate POST request for writing records
@@ -931,7 +930,7 @@ export default function Profile() {
         ens: ENS,
         controller: _Wallet_ || constants.zeroAddress,
         ipns: '',
-        recordsTypes: recordsTypes,
+        recordsTypes: newKeys,
         recordsValues: encodedValues,
         recordsRaw: newValues,
         revision: '',
@@ -953,7 +952,6 @@ export default function Profile() {
             })
             .then(response => response.json())
             .then(async data => {
-
               if (data.response) {
                 // Get gas consumption estimate
                 let gas: any = {}
@@ -993,7 +991,6 @@ export default function Profile() {
                   }
                   checkGas()
                 })
-
                 const gateway = async () => {
                   if (gas) {
                     // Write revision to database
@@ -1006,8 +1003,7 @@ export default function Profile() {
                       modalData: undefined,
                       trigger: false
                     })
-                    setSuccess('<span><span style="color: lightgreen">Resolver Migrated</span>! Enjoy Off-Chain Records!</span>')
-                    setSuccessModal(true)
+                    setSuccess('<div style="font-weight: 800"><span style="color: lime; font-size: 22px">Records Updated!</span></div>')
                   }
                 }
                 gateway()
@@ -1369,7 +1365,7 @@ export default function Profile() {
                   </Gas>
                   <Success
                     color={color}
-                    icon={icon}
+                    icon={'check_circle_outline'}
                     onClose={() => setSuccessModal(false)}
                     show={successModal}
                     handleTrigger={handleSuccessTrigger}

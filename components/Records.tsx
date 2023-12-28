@@ -257,7 +257,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
                   }}
                   disabled={unauthorised()}
                   style={{
-                    background: '#361a17',
+                    background: meta.resolver === constants.ccip2[meta.chainId === 5 ? 0 : 1] ? '#082400' : '#361a17',
                     outline: 'none',
                     border: 'none',
                     padding: '5px 30px 5px 5px',
