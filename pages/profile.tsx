@@ -34,7 +34,7 @@ export default function Profile() {
   const { data: gasData, isError } = useFeeData() // Current gas prices
   const { query } = router.query // Query from main page
   const { width, height } = useWindowDimensions() // Get window dimensions
-  const [ENS, setENS] = React.useState('Lite.NameSys') // Set ENS from query
+  const [ENS, setENS] = React.useState('') // Set ENS from query
   const [resolver, setResolver] = React.useState('') // Get ENS Resolver for query
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [write, setWrite] = React.useState(false) // Sets write flag
@@ -512,7 +512,7 @@ export default function Profile() {
     address: `0x${!meta.wrapped ? constants.ensConfig[0].addressOrName.slice(2) : constants.ensConfig[chain === '1' ? 7 : 3].addressOrName.slice(2)}`,
     abi: !meta.wrapped ? constants.ensConfig[0].contractInterface : constants.ensConfig[chain === '1' ? 7 : 3].contractInterface,
     functionName: 'setResolver',
-    args: [ethers.namehash(ENS), ccip2Contract]
+    args: [ENS ? ethers.namehash(ENS) : `${constants.randomString(10)}.eth`, ccip2Contract]
   })
   // Wagmi hook for awaiting transaction processing
   const { isSuccess: txSuccess, isError: txError, isLoading: txLoading } = useWaitForTransaction({
@@ -708,7 +708,7 @@ export default function Profile() {
     address: `0x${ccip2Config.addressOrName.slice(2)}`,
     abi: ccip2Config.contractInterface,
     functionName: 'getRecordhash',
-    args: [ethers.namehash(ENS)]
+    args: [ENS ? ethers.namehash(ENS) : `${constants.randomString(10)}.eth`]
   })
 
   // Sets Metadata
@@ -912,6 +912,7 @@ export default function Profile() {
       let encodedValues: any = {}
       let newValues: any = {}
       let newKeys: any = {}
+      let recordsTypes: string[] = []
       let signatures: any = {}
       for (const key in _records) {
         if (_records.hasOwnProperty(key) && _records[key].new !== '') {
@@ -919,6 +920,7 @@ export default function Profile() {
           encodedValues[key] = encodeValue(key, _records[key].new, _records[key].signature, meta.signature, meta.signer)
           signatures[key] = _records[key].signature
           newKeys[key] = key
+          recordsTypes.push(key)
         }
       }
       // Generate POST request for writing records
@@ -929,14 +931,13 @@ export default function Profile() {
         ens: ENS,
         controller: _Wallet_ || constants.zeroAddress,
         ipns: '',
-        recordsTypes: newKeys,
+        recordsTypes: recordsTypes,
         recordsValues: encodedValues,
         recordsRaw: newValues,
         revision: '',
         chain: chain,
         hashType: 'gateway',
       }
-      console.log(request)
       const editRecord = async () => {
         setMessage('Writing Records')
         try {
@@ -951,6 +952,7 @@ export default function Profile() {
             })
             .then(response => response.json())
             .then(async data => {
+
               if (data.response) {
                 // Get gas consumption estimate
                 let gas: any = {}
@@ -1026,7 +1028,7 @@ export default function Profile() {
   return (
     <>
       <Head>
-        <title>{`${ENS}`}</title>
+        <title>{`${ENS ? `NameSys Lite - ${ENS}` : 'NameSys Lite'}`}</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
       <main className='flex-column'>
@@ -1089,7 +1091,7 @@ export default function Profile() {
                 src="/logo.png"
                 alt="namesys-logo"
                 width={500}
-                height={100}
+                height={500}
                 priority
               />
               <div className='flex-column' style={{ marginTop: '-4%' }}>
@@ -1228,7 +1230,6 @@ export default function Profile() {
                         </span>
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -1244,7 +1245,7 @@ export default function Profile() {
                   <img
                     alt='ens'
                     src='ens.png'
-                    width={'25px'}
+                    width={'30px'}
                     style={{ margin: '0 15px -3px 0' }}
                   />
                   {ENS ? ENS.slice(0, -4) : ''}

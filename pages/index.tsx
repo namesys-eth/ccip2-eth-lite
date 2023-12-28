@@ -31,7 +31,6 @@ export default function Home() {
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
       <main className='flex-column'>
-        <div style={{ fontFamily: 'Rajdhani' }}></div>
         <div style={{ fontFamily: 'SF Mono' }}></div>
         <div style={{ fontFamily: 'Spotnik' }}></div>
         <div style={{ marginTop: '7.5%' }}></div>
@@ -41,7 +40,7 @@ export default function Home() {
             src="/logo.png"
             alt="namesys-logo"
             width={1500}
-            height={100}
+            height={1500}
             priority
           />
           <div className='flex-column'>

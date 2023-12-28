@@ -4,11 +4,7 @@ const nextConfig = {
 	distDir: "out",
 	output: env === 'production' ? 'export' : 'standalone',
 	reactStrictMode: true,
-	assetPrefix: "",
-	images: {
-		loader: env === 'production' ? 'akamai' : 'default',
-		path: '',
-	}
+	assetPrefix: ""
 }
 
 module.exports = nextConfig
