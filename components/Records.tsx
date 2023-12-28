@@ -46,7 +46,6 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
   function canManage() {
     return !_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager)
   }
-  !_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager)
 
   // INIT
   React.useEffect(() => {
@@ -121,11 +120,62 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
                 }}
               >
                 <div className='flex-row-sans-justify'>
+                  <span
+                    className="material-icons-round smol"
+                    style={{
+                      fontSize: '20px',
+                      display: 'inline-block',
+                      color: 'cyan',
+                      marginRight: '5px',
+                      marginLeft: '-2px'
+                    }}
+                  >
+                    {
+                      record.id === 'storage' ? 'cloud_circle' : (
+                        record.id === 'resolver' ? 'gavel' : (
+                          record.id === 'avatar' ? 'portrait' : (
+                            record.id === 'addr' ? 'account_balance_wallet' : (
+                              record.id === 'contenthash' ? 'public' : (
+                                record.id === 'com.github' ? 'code' : (
+                                  record.id === 'url' ? 'share' : (
+                                    record.id === 'email' ? 'email' : (
+                                      record.id === 'pubkey' ? 'key' : (
+                                        record.id === 'com.twitter' ? 'groups' : (
+                                          record.id === 'com.discord' ? 'group_add' : (
+                                            record.id === 'xyz.farcaster' ? 'people_alt' : (
+                                              record.id === 'nostr' ? 'groups' : (
+                                                record.id === 'btc' ? 'currency_bitcoin' : (
+                                                  record.id === 'ltc' ? 'currency_lira' : (
+                                                    record.id === 'doge' ? 'pets' : (
+                                                      record.id === 'sol' ? 'flash_on' : (
+                                                        record.id === 'atom' ? 'font_download' : (
+                                                          record.id === 'zonehash' ? 'tag' :
+                                                            'circle_notifications'
+                                                        )
+                                                      )
+                                                    )
+                                                  )
+                                                )
+                                              )
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    }
+                  </span>
                   <h1
                     style={{
                       fontFamily: 'Spotnik',
                       fontSize: '17px',
-                      color: 'skyblue',
+                      color: 'cyan',
                       marginBottom: '5px'
                     }}
                   >

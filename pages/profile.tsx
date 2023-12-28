@@ -938,6 +938,7 @@ export default function Profile() {
         chain: chain,
         hashType: 'gateway',
       }
+      console.log(request)
       const editRecord = async () => {
         setMessage('Writing Records')
         try {
