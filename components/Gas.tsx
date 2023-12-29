@@ -50,14 +50,14 @@ const Gas: React.FC<Gas> = ({ icon, color, show, onClose, children }) => {
         {icon &&
           <StyledModalTitle>
             <span
-              className="material-icons"
+              className="material-icons emphasis"
               style={{
                 marginTop: '14px',
                 fontSize: '72px',
                 color: color
               }}
             >
-              {'verified'}
+              {'check_circle_outline'}
             </span>
           </StyledModalTitle>}
         <StyledModalBody>
@@ -75,7 +75,7 @@ const Gas: React.FC<Gas> = ({ icon, color, show, onClose, children }) => {
                 fontWeight: '700'
               }}
             >
-              Off-Chain Records set
+              Records Updated
             </div>
             <div
               style={{

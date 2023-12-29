@@ -44,9 +44,10 @@ const Success: React.FC<ModalProps> = ({ icon, color, show, onClose, children, h
         {icon &&
           <StyledModalTitle>
             <span
-              className="material-icons"
+              className="material-icons emphasis"
               style={{
-                marginTop: '4px',
+                marginTop: '5px',
+                marginBottom: '10px',
                 fontSize: '68px',
                 color: color
               }}
@@ -59,17 +60,17 @@ const Success: React.FC<ModalProps> = ({ icon, color, show, onClose, children, h
           <div
             className="flex-row"
             style={{
-              marginLeft: '0px'
+              marginTop: '5px',
+              marginBottom: '5px'
             }}
           >
             <button
-              className="button-option"
+              className="button"
               style={{
                 height: '35px',
                 width: '105px'
               }}
               onClick={handleCloseClick}
-              data-tooltip='Continue'
             >
               <div
                 className="flex-row"
@@ -78,7 +79,7 @@ const Success: React.FC<ModalProps> = ({ icon, color, show, onClose, children, h
                   fontWeight: '700'
                 }}
               >
-                {'OK'}&nbsp;<span className="material-icons chonk">done_all</span>
+                {'Ok'}&nbsp;<span className="material-icons chonk">done_all</span>
               </div>
             </button>
           </div>
