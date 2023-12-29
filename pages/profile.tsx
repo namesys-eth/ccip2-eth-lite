@@ -146,7 +146,7 @@ export default function Profile() {
   // Sign a record
   async function signRecord(records: constants.RecordsType, _signer: ethers.Wallet, _type: string) {
     if (records[_type].new) {
-      return await _signer.signMessage(statementRecords(records[_type].new, genExtradata(_type, records[_type].new), meta.signer))
+      return await _signer.signMessage(statementRecords(records[_type].path, genExtradata(_type, records[_type].new), meta.signer))
     } else {
       return ''
     }
@@ -179,8 +179,7 @@ export default function Profile() {
       type = 'address'
       _value = value
     }
-    let _encoder = ethers.AbiCoder.defaultAbiCoder()
-    let _result = ethers.keccak256(_encoder.encode([type], [_value]))
+    let _result = ethers.AbiCoder.defaultAbiCoder().encode([type], [_value])
     let _ABI = [constants.signedRecord]
     let _interface = new ethers.Interface(_ABI)
     let _encodedWithSelector = _interface.encodeFunctionData(
@@ -222,8 +221,7 @@ export default function Profile() {
       type = 'address'
       _value = _recordValue
     }
-    let _encoder = ethers.AbiCoder.defaultAbiCoder()
-    const toPack = ethers.keccak256(_encoder.encode([type], [_value]))
+    const toPack = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode([type], [_value]))
     const _extradata = ethers.hexlify(ethers.solidityPacked(["bytes"], [toPack]))
     return _extradata
   }
@@ -816,7 +814,7 @@ export default function Profile() {
       if (sigCount === 1 && !signer[0]) {
         setMessage('Generating Signer')
         const keygen = async () => {
-          const _origin = ENS
+          const _origin = `eth:${_Wallet_ || constants.zeroAddress}`
           const __keypair = await KEYGEN(_origin, caip10, signature, saltModalState.modalData)
           setSigner(__keypair)
           let _meta = { ...meta }
@@ -938,7 +936,6 @@ export default function Profile() {
         chain: chain,
         hashType: 'gateway',
       }
-      console.log(request)
       const editRecord = async () => {
         setMessage('Writing Records')
         try {
