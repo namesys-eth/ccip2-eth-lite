@@ -1,7 +1,8 @@
 {
   "name": "ccip2-eth-lite",
-  "version": "0.0.1-alpha",
-  "description": "NameSys Lite Client",
+  "version": "0.9-alpha",
+  "homepage": "https://lite.namesys.xyz",
+  "description": "NameSys/CCIP2 Lite Client",
   "private": true,
   "scripts": {
     "postinstall": "patch-package",
