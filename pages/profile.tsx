@@ -255,7 +255,7 @@ export default function Profile() {
     return gas
   }
 
-  // Function for writing IPNS Revision metadata to NameSys backend; needed for updates
+  // Function for writing Revision metadata to NameSys backend; needed for updates
   async function writeRevision(revision: undefined, gas: {}, timestamp: string, _ipfs: string) {
     let __revision: any = {}
     if (revision) {
@@ -808,7 +808,7 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recordsState])
 
-  // Sets signature from Wagmi signMessage() as S_IPNS(K_WALLET)
+  // Sets signature from Wagmi signMessage() as S_SIGNER(K_WALLET)
   React.useEffect(() => {
     if (signature) {
       if (sigCount === 1 && !signer[0]) {
@@ -869,7 +869,7 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature, sigCount, signer])
 
-  // Sets signature from Wagmi signMessage() as S_IPNS(K_WALLET)
+  // Sets signature from Wagmi signMessage() as S_SIGNER(K_WALLET)
   React.useEffect(() => {
     if (signer[0]) {
       setMessage('Approving Signer')
@@ -1046,7 +1046,7 @@ export default function Profile() {
               <span
                 style={{
                   color: '#fc6603',
-                  fontSize: '20px',
+                  fontSize: '24px',
                   fontWeight: '700'
                 }}
               >

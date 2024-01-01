@@ -4,15 +4,18 @@ import React from 'react'
 import { useRouter } from 'next/router'
 import styles from './page.module.css'
 import SearchBox from '../components/SearchBox'
+import Loading from '../components/LoadingColors'
 import { isMobile } from 'react-device-detect'
 import './index.css'
 
 export default function Home() {
   const router = useRouter()
   const [mobile, setMobile] = React.useState(false)
+  const [loading, setLoading] = React.useState(false) // Loading Records marker
 
   // Triggers search of ENS domain
   const handleNameSearch = (query: string) => {
+    setLoading(true)
     router.push(`/profile?query=${query}`)
   }
 
@@ -50,18 +53,26 @@ export default function Home() {
             </h4>
           </div>
         </div>
-        <div
-          className='main-search-container'
-          style={{
-            maxHeight: '520px',
-            overflowY: 'auto',
-            marginBottom: '50px',
-          }}
-        >
-          <SearchBox
-            onSearch={handleNameSearch}
+        {!loading && (
+          <div
+            className='main-search-container'
+            style={{
+              maxHeight: '520px',
+              overflowY: 'auto',
+              marginBottom: '50px',
+            }}
+          >
+            <SearchBox
+              onSearch={handleNameSearch}
+            />
+          </div>
+        )}
+        {loading && (
+          <Loading
+            height={50}
+            width={50}
           />
-        </div>
+        )}
         <div className={styles.grid} style={{ marginTop: '50px' }}>
           <a
             href="https://pro.namesys.xyz"
