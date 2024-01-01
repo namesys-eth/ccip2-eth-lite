@@ -35,13 +35,11 @@ export default function Home() {
         <div style={{ fontFamily: 'Spotnik' }}></div>
         <div style={{ marginTop: '7.5%' }}></div>
         <div className='flex-column'>
-          <Image
-            className={'logo'}
-            src="/logo.png"
-            alt="namesys-logo"
-            width={1500}
-            height={1500}
-            priority
+          <img
+            alt='namesys-logo'
+            src='logo.png'
+            width={'100px'}
+            style={{ marginBottom: '-10px' }}
           />
           <div className='flex-column'>
             <h1 style={{ color: '#ff2600' }}>
@@ -111,7 +109,7 @@ export default function Home() {
         >
           <span
             style={{
-              color: 'skyblue',
+              color: 'grey',
               fontWeight: '700',
               fontSize: mobile ? '12px' : '14px',
               paddingBottom: '5px'
@@ -121,9 +119,9 @@ export default function Home() {
           </span>
           <span
             style={{
-              color: 'white',
+              color: 'skyblue',
               fontWeight: '700',
-              fontSize: mobile ? '16px' : '20px'
+              fontSize: mobile ? '14px' : '16px'
             }}
           >
             {'ENS DAO'}

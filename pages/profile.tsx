@@ -1081,13 +1081,11 @@ export default function Profile() {
               </div>
             </div>
             <div className='flex-column' style={{ opacity: 0.35, marginTop: '-2%' }}>
-              <Image
-                className={'logo-2'}
-                src="/logo.png"
-                alt="namesys-logo"
-                width={500}
-                height={500}
-                priority
+              <img
+                alt='namesys-logo'
+                src='logo.png'
+                width={'50px'}
+                style={{ marginBottom: '-15px' }}
               />
               <div className='flex-column' style={{ marginTop: '-4%' }}>
                 <h4 style={{ color: '#ff2600' }}>
@@ -1189,7 +1187,7 @@ export default function Profile() {
                         </span>
                         <img
                           alt="logo-2"
-                          src={constants.ensContracts.includes(resolver) ? 'ens.png' : (resolver === ccip2Contract ? 'logo.png' : '')}
+                          src={constants.ensContracts.includes(resolver) ? 'ens.png' : (resolver === ccip2Contract ? 'logo.png' : 'ens.png')}
                           width={'15px'}
                           style={{ margin: `0 15px -3px 7.5px` }}
                         />
@@ -1440,9 +1438,9 @@ export default function Profile() {
             >
               <span
                 style={{
-                  color: 'skyblue',
+                  color: 'grey',
                   fontWeight: '700',
-                  fontSize: mobile ? '12px' : '14px',
+                  fontSize: mobile ? '10px' : '14px',
                   paddingBottom: '5px'
                 }}
               >
@@ -1450,9 +1448,9 @@ export default function Profile() {
               </span>
               <span
                 style={{
-                  color: 'white',
+                  color: 'skyblue',
                   fontWeight: '700',
-                  fontSize: mobile ? '16px' : '20px'
+                  fontSize: mobile ? '12px' : '16px'
                 }}
               >
                 {'ENS DAO'}
