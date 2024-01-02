@@ -1032,7 +1032,7 @@ export default function Profile() {
         <div style={{ fontFamily: 'Spotnik' }}></div>
         {loading && (
           <>
-            <div style={{ marginTop: '350px' }}>
+            <div style={{ marginTop: mobile ? '300px' : '350px' }}>
               <Loading
                 height={50}
                 width={50}

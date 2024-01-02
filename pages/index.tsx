@@ -38,12 +38,22 @@ export default function Home() {
         <div style={{ fontFamily: 'Spotnik' }}></div>
         <div style={{ marginTop: '7.5%' }}></div>
         <div className='flex-column'>
-          <img
-            alt='namesys-logo'
-            src='logo.png'
-            width={'100px'}
-            style={{ marginBottom: '-10px' }}
-          />
+          {!loading && mobile && (
+            <img
+              alt='namesys-logo'
+              src='logo.png'
+              width={'100px'}
+              style={{ marginBottom: '-10px' }}
+            />
+          )}
+          {!mobile && (
+            <img
+              alt='namesys-logo'
+              src='logo.png'
+              width={'100px'}
+              style={{ marginBottom: '-10px' }}
+            />
+          )}
           <div className='flex-column'>
             <h1 style={{ color: '#ff2600' }}>
               NameSys
