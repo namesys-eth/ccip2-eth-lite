@@ -1,6 +1,6 @@
-# CCIP2 `LITE` Client
+# CCIP2 Lite Client
 
-**LITE** Client for CCIP2 ENS Records Manager
+**Lite** Client for CCIP2 ENS Records Manager
 
 # Notes
 
