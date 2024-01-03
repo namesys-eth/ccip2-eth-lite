@@ -7,7 +7,6 @@ const optionsCSS = {
 (async function () {
   try {
     const resultsCSS = await replace(optionsCSS)
-    console.log(resultsCSS)
   } catch (error) {
   }
 })()

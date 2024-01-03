@@ -321,9 +321,9 @@ export function isGoodValue(id: string, value: string) {
       (id === 'avatar' && isAvatar(value)) ||
       (id === 'url' && isUrl(value)) ||
       (id === 'description') && value ||
-      (id === 'twitter' && isTwitter(value)) ||
-      (id === 'discord' && isDiscord(value)) ||
-      (id === 'github' && isGithub(value))
+      (id === 'com.twitter' && isTwitter(value)) ||
+      (id === 'com.discord' && isDiscord(value)) ||
+      (id === 'com.github' && isGithub(value))
     )
   } else {
     return false

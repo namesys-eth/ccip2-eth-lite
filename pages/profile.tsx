@@ -1100,7 +1100,7 @@ export default function Profile() {
               <div className={!mobile ? 'flex-column-sans-align' : 'flex-column'} style={{ margin: '10px 0 0 20px' }}>
                 <img
                   alt="logo"
-                  src={records.avatar.value || 'profile.png'}
+                  src={records.avatar.source || 'profile.png'}
                   onError={(event) => {
                     (event.target as any).onerror = null;
                     (event.target as any).src = 'profile.png';
