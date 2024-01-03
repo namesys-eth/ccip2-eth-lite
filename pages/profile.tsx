@@ -1394,16 +1394,16 @@ export default function Profile() {
             </div>
             <div className={styles.grid} style={{ margin: '120px 0 0 0' }}>
               <a
-                href="https://pro.namesys.xyz"
+                href="https://app.namesys.xyz"
                 className={styles.card}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: '#ff2600' }}
               >
                 <h1 style={{ fontSize: '20px' }}>
-                  NAMESYS PRO <span className="material-icons micon">settings</span>
+                  NAMESYS APP <span className="material-icons micon">settings</span>
                 </h1>
-                <p>NameSys Pro Client</p>
+                <p>NameSys Advanced Client</p>
               </a>
 
               <a
