@@ -4,14 +4,20 @@ const nextConfig = {
 	distDir: "out",
 	output: env === 'production' ? 'export' : 'standalone',
 	reactStrictMode: true,
-	basePath: "/ccip2-eth-lite",
-	assetPrefix: "/ccip2-eth-lite/",
+	basePath: env !== 'production' ? "" : "/ccip2-eth-lite",
+	assetPrefix: env !== 'production' ? "" : "/ccip2-eth-lite/",
 	...(env === 'production' && {
 		images: {
 			loader: 'akamai',
 			path: '',
 		}
-	})
+	}),
+	exportPathMap: async function (defaultPathMap) {
+		return {
+			'/': { page: '/' },
+			'/profile': { page: '/profile' },
+		}
+	}
 }
 
 module.exports = nextConfig

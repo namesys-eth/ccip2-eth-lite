@@ -2,7 +2,7 @@ import React from 'react'
 import { isMobile } from 'react-device-detect'
 import ReactDOM from 'react-dom'
 import styled from 'styled-components'
-import Help from '../components/Help'
+import Help from './Help'
 import * as constants from '../utils/constants'
 
 interface ModalProps {
@@ -56,28 +56,28 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
             <div
               className="material-icons"
               style={{
-                marginTop: '4px',
+                marginTop: '10px',
                 fontSize: '50px'
               }}
             >
-              download
+              satellite_alt
             </div>
             <div
               style={{
-                marginTop: '10px',
+                marginTop: '25px',
                 marginBottom: '15px'
               }}
             >
               <span
                 style={{
                   fontWeight: '700',
-                  fontSize: '17px'
+                  fontSize: '20px'
                 }}
               >
                 Import Records
               </span>
               <button
-                className="button-tiny"
+                className="button-tiny button-blank"
                 style={{
                   marginBottom: '-7.5px'
                 }}
@@ -101,9 +101,10 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
           </StyledModalTitle>}
         <StyledModalBody>
           <input
+            className='inputextra'
             id='keyid'
             key='0'
-            placeholder={inputValue || '0x'}
+            placeholder={inputValue || 'enter resolver address'}
             type='text'
             value={inputValue}
             onChange={(e) => {
@@ -122,7 +123,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
               width: '100%',
               wordWrap: 'break-word',
               textAlign: 'left',
-              color: 'rgb(255, 255, 255, 1)',
+              color: constants.isAddr(inputValue) ? 'lightgreen' : 'rgb(255, 255, 255, 1)',
               cursor: 'copy'
             }}
           />
@@ -130,7 +131,7 @@ const ResolverModal: React.FC<ModalProps> = ({ show, onClose, children, handleMo
             className="button"
             style={{
               height: '30px',
-              width: '110px',
+              width: '120px',
               marginTop: '23px',
               fontSize: '15px'
             }}
@@ -218,7 +219,7 @@ const StyledModal = styled.div`
   background-size: 400% 400%;
   width: 400px;
   max-width: ${isMobile ? '90%' : '60%'};
-  height: 230px;
+  height: 250px;
   border-radius: 6px;
   overflow-y: initial !important
   display: flex;

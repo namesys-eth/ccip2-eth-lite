@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Head from 'next/head'
 import React from 'react'
 import styles from './page.module.css'
@@ -8,17 +7,17 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { ethers } from 'ethers'
 import * as constants from '../utils/constants'
 import { isMobile } from 'react-device-detect'
-import Loading from '../components/LoadingColors'
+import Loading from '../components/Loading'
 import { AbiItem } from 'web3-utils'
 import { KEYGEN } from '../utils/keygen'
 import Records from '../components/Records'
 import Salt from '../components/Salt'
 import Success from '../components/Success'
 import Error from '../components/Error'
-import Gas from '../components/Gas'
+import GasSavings from '../components/WrapUp'
 import * as ensContent from '../utils/contenthash'
 import * as addrEncode from '@ensdomains/address-encoder'
-import ResolverModal from '../components/ResolverModal'
+import ResolverModal from '../components/Import'
 import { useWindowDimensions } from '../hooks/useWindowDimensions'
 import {
   useAccount,
@@ -40,7 +39,7 @@ export default function Profile() {
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [write, setWrite] = React.useState(false) // Sets write flag
   const [sigCount, setSigCount] = React.useState(0) // Set signature count
-  const [color, setColor] = React.useState('lime') // Set color
+  const [color, setColor] = React.useState('lightgreen') // Set color
   const [gas, setGas] = React.useState({}) // Sets list of gas consumption
   const [gasModal, setGasModal] = React.useState(false) // Sets gas modal state
   const [crash, setCrash] = React.useState(false) // Set crash status
@@ -1169,7 +1168,7 @@ export default function Profile() {
                           <div
                             className="material-icons-round smoller"
                             style={{
-                              color: meta.resolver === ccip2Contract ? (canUse ? 'lightgreen' : 'orange') : 'orange',
+                              color: meta.resolver === ccip2Contract ? (canUse ? 'lime' : 'orange') : 'orange',
                               fontSize: '22px',
                             }}
                           >
@@ -1279,7 +1278,7 @@ export default function Profile() {
                     </div>
                   </button>
                   <button
-                    className={!justMigrated && resolver !== ccip2Contract ? 'button blink' : 'button'}
+                    className={!justMigrated && resolver !== ccip2Contract && !unauthorised() ? 'button blink' : 'button'}
                     style={{
                       width: '50px',
                       margin: !mobile ? '-7% 0 0 52%' : '-3% 0 0 0',
@@ -1288,7 +1287,7 @@ export default function Profile() {
                     data-tooltip='Migrate Resolver'
                     disabled={!_Wallet_ || (!meta.wrapped && _Wallet_ !== meta.owner) || (meta.wrapped && _Wallet_ !== meta.manager) || meta.resolver === ccip2Contract}
                   >
-                    <span className="material-icons-round micon">shopping_cart</span>
+                    <span className="material-icons-round micon bright">shopping_cart</span>
                   </button>
                 </div>
                 {/* IMPORT */}
@@ -1327,7 +1326,7 @@ export default function Profile() {
                     data-tooltip={'Import ENS Records'}
                     disabled={!canUse || unauthorised()}
                   >
-                    <span className="material-icons-round micon">download</span>
+                    <span className="material-icons-round micon bright">download</span>
                   </button>
                 </div>
                 <div>
@@ -1348,7 +1347,7 @@ export default function Profile() {
                   >
                     {[ENS, 'gateway']}
                   </Salt>
-                  <Gas
+                  <GasSavings
                     color={'lime'}
                     icon={'free_breakfast'}
                     onClose={() => {
@@ -1358,7 +1357,7 @@ export default function Profile() {
                     show={gasModal}
                   >
                     {gas}
-                  </Gas>
+                  </GasSavings>
                   <Success
                     color={color}
                     icon={'check_circle_outline'}

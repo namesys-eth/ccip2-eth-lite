@@ -60,6 +60,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
             fontSize: query ? '21px' : '19px',
             paddingTop: query ? '8px' : '15px',
             paddingBottom: query ? '8px' : '15px',
+            color: !query ? 'rgb(255, 255, 255, 0.20)' : 'white'
           }}
         />
         <button

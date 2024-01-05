@@ -13,7 +13,7 @@ function sumValues(obj: { [key: string]: number }): number {
   return total;
 }
 
-interface Gas {
+interface GasSavings {
   icon: string
   color: string
   show: boolean
@@ -21,7 +21,7 @@ interface Gas {
   children: any
 }
 
-const Gas: React.FC<Gas> = ({ icon, color, show, onClose, children }) => {
+const GasSavings: React.FC<GasSavings> = ({ icon, color, show, onClose, children }) => {
   const [browser, setBrowser] = React.useState(false);
   React.useEffect(() => {
     setBrowser(true);
@@ -57,7 +57,7 @@ const Gas: React.FC<Gas> = ({ icon, color, show, onClose, children }) => {
                 color: color
               }}
             >
-              {'check_circle_outline'}
+              {'wind_power'}
             </span>
           </StyledModalTitle>}
         <StyledModalBody>
@@ -202,4 +202,4 @@ const StyledModalOverlay = styled.div`
   background-color: rgba(0, 0, 0, 1);
 `;
 
-export default Gas;
+export default GasSavings;

@@ -4,6 +4,7 @@ import { isMobile } from 'react-device-detect'
 import { useWindowDimensions } from '../hooks/useWindowDimensions'
 import * as constants from '../utils/constants'
 import Help from '../components/Help'
+import DynamicAvatar from './Dynamic'
 import {
   useAccount
 } from 'wagmi'
@@ -22,10 +23,22 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
   const { address: _Wallet_ } = useAccount()
   const [helpModal, setHelpModal] = React.useState(false)
   const [help, setHelp] = React.useState('')
-  const [color, setColor] = React.useState('lightgreen') // Set color
+  const [color, setColor] = React.useState('lime') // Set color
   const [inputValue, setInputValue] = React.useState(records)
+  const [roster, setRoster] = React.useState(constants.dynamicRoster.map(item => ({ ...item })))
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const { width, height } = useWindowDimensions() // Get window dimensions
+  const [avatarModalState, setAvatarModalState] = React.useState<constants.MainBodyState>(constants.modalTemplate) // Avatar modal state
+  const [avatarModal, setAvatarModal] = React.useState(false) // Avatar modal
+
+  // Handle Avatar modal data return
+  const handleAvatarModalData = (data: string) => {
+    setAvatarModalState(prevState => ({ ...prevState, modalData: data }))
+  }
+  // Handle Avatar modal trigger
+  const handleAvatarTrigger = (trigger: boolean) => {
+    setAvatarModalState(prevState => ({ ...prevState, trigger: trigger }))
+  }
 
   // Whether connector is authorised to write
   function unauthorised() {
@@ -54,6 +67,15 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height])
+
+  React.useEffect(() => {
+    if (avatarModalState.trigger) {
+      setRoster(JSON.parse(avatarModalState.modalData))
+    } else {
+      setRoster(constants.dynamicRoster.map(item => ({ ...item })))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [avatarModalState])
 
   const handleSubmit = (e: { preventDefault: () => void; }) => {
     handleModalData(JSON.stringify(inputValue))
@@ -109,7 +131,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
           <div key={record.path}
             className={!mobile ? styles.arrange : 'flex-column'}
             style={{
-              marginTop: !mobile ? '0' : '10px'
+              marginTop: !mobile ? '10px' : '10px'
             }}
           >
             <div className='flex-sans-align'>
@@ -209,13 +231,30 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
                     <div
                       className="material-icons-round smol"
                       style={{
-                        color: getVal(record.id) && constants.isGoodValue(record.id, getVal(record.id)) ? 'yellowgreen' : (!getVal(record.id) ? 'transparent' : 'orangered'),
-                        marginLeft: '5px'
+                        color: getVal(record.id) && constants.isGoodValue(record.id, getVal(record.id)) ? 'lime' : (!getVal(record.id) ? 'transparent' : 'orangered'),
+                        marginLeft: record.id === 'avatar' ? '25px' : '5px'
                       }}
                     >
                       {getVal(record.id) && constants.isGoodValue(record.id, getVal(record.id)) ? 'check_circle_outline' : 'info_outline'}
                     </div>
                   </button>
+                  {record.id === 'avatar' && !unauthorised() && process.env.NODE_ENV === 'development' && (
+                    <button
+                      className="button-dynamic emphasis-smol"
+                      onClick={() => { setAvatarModal(true) }}
+                      data-tooltip={'Dynamic Avatar'}
+                    >
+                      <div
+                        className="material-icons-round smol"
+                        style={{
+                          color: 'green',
+                          marginLeft: '-63px'
+                        }}
+                      >
+                        {'offline_bolt'}
+                      </div>
+                    </button>
+                  )}
                 </div>
                 <div>
                   <button
@@ -269,7 +308,7 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
                     width: '400px',
                     wordWrap: 'break-word',
                     textAlign: 'left',
-                    color: record.value !== 'loading...' && constants.isGoodValue(record.id, getVal(record.id)) ? 'lightgreen' : hue,
+                    color: record.value !== '...' && constants.isGoodValue(record.id, getVal(record.id)) ? 'lime' : hue,
                     cursor: 'copy'
                   }}
                 />
@@ -304,6 +343,14 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
           >
             {help}
           </Help>
+          <DynamicAvatar
+            mobile={mobile}
+            onClose={() => setAvatarModal(false)}
+            show={avatarModal}
+            dynamic={roster}
+            handleTrigger={handleAvatarTrigger}
+            handleModalData={handleAvatarModalData}
+          />
         </div>
       </div>
     </div>

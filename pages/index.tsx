@@ -1,10 +1,9 @@
-import Image from 'next/image'
 import Head from 'next/head'
 import React from 'react'
 import { useRouter } from 'next/router'
 import styles from './page.module.css'
-import SearchBox from '../components/SearchBox'
-import Loading from '../components/LoadingColors'
+import SearchBox from '../components/Search'
+import Loading from '../components/Loading'
 import { isMobile } from 'react-device-detect'
 import './index.css'
 

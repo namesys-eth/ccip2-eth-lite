@@ -12,8 +12,6 @@ import { Alchemy, Network } from "alchemy-sdk"
 import { ethers } from 'ethers'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
-import * as ensContent from '../utils/contenthash'
-import axios from 'axios'
 
 export const modalTemplate = {
   modalData: '',
@@ -73,6 +71,30 @@ export function randomString(length: number) {
   }
   return result;
 }
+
+// Dynamic Avatar schedule
+export const dynamicRoster = [
+  {
+    index: 0,
+    tick: 0,
+    value: ''
+  },
+  {
+    index: 1,
+    tick: 1,
+    value: ''
+  },
+  {
+    index: 2,
+    tick: 2,
+    value: ''
+  },
+  {
+    index: 3,
+    tick: 3,
+    value: ''
+  }
+]
 
 // ENS Records
 export const ensRecords = {
@@ -209,7 +231,7 @@ export const records = {
   "contenthash": {
     id: 'contenthash',
     header: 'Contenthash',
-    value: 'loading...',
+    value: '...',
     type: 'contenthash',
     path: 'contenthash',
     source: '',
@@ -222,7 +244,7 @@ export const records = {
   "addr": {
     id: 'addr',
     header: 'Address',
-    value: 'loading...',
+    value: '...',
     type: 'address',
     path: 'address/60',
     source: '',
@@ -235,7 +257,7 @@ export const records = {
   "avatar": {
     id: 'avatar',
     header: 'Avatar',
-    value: 'loading...',
+    value: '...',
     type: 'text',
     path: 'text/avatar',
     source: '',
@@ -248,7 +270,7 @@ export const records = {
   "url": {
     id: 'url',
     header: 'URL',
-    value: 'loading...',
+    value: '...',
     type: 'text',
     path: 'text/url',
     source: '',
@@ -261,7 +283,7 @@ export const records = {
   "description": {
     id: 'description',
     header: 'Description',
-    value: 'loading...',
+    value: '...',
     type: 'text',
     path: 'text/description',
     source: '',
@@ -274,7 +296,7 @@ export const records = {
   "com.twitter": {
     id: 'com.twitter',
     header: 'X | Twitter',
-    value: 'loading...',
+    value: '...',
     type: 'text',
     path: 'text/com.twitter',
     source: '',
@@ -287,7 +309,7 @@ export const records = {
   "com.discord": {
     id: 'com.discord',
     header: 'Discord',
-    value: 'loading...',
+    value: '...',
     type: 'text',
     path: 'text/com.discord',
     source: '',
@@ -300,7 +322,7 @@ export const records = {
   "com.github": {
     id: 'com.github',
     header: 'Github',
-    value: 'loading...',
+    value: '...',
     type: 'text',
     path: 'text/com.github',
     source: '',
