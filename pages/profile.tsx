@@ -38,17 +38,17 @@ export default function Profile() {
   const [resolver, setResolver] = React.useState('') // Get ENS Resolver for query
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const [write, setWrite] = React.useState(false) // Sets write flag
+  const [triggerRefresh, setTriggerRefresh] = React.useState(true) // Sets refresh flag
   const [sigCount, setSigCount] = React.useState(0) // Set signature count
   const [color, setColor] = React.useState('lightgreen') // Set color
   const [gas, setGas] = React.useState({}) // Sets list of gas consumption
   const [gasModal, setGasModal] = React.useState(false) // Sets gas modal state
   const [crash, setCrash] = React.useState(false) // Set crash status
-  const [icon, setIcon] = React.useState('') // Sets icon for the loading state
   const [success, setSuccess] = React.useState('') // Sets success text for the Success modal
   const [saltModal, setSaltModal] = React.useState(false) // Salt (password/key-identifier)
   const [successModal, setSuccessModal] = React.useState(false) // Success modal trigger
   const [signer, setSigner] = React.useState(['', '']) // Set signer keypair [priv, pub]
-  const [cache, setCache] = React.useState(constants.ensRecords) // Set cache
+  const [cache, setCache] = React.useState<constants.RecordsType>({}) // Set cache
   const [message, setMessage] = React.useState('Loading') // Set message to display
   const [justMigrated, setJustMigrated] = React.useState(false) // Set migrated flag
   const [canUse, setCanUse] = React.useState(false) // Set import flag
@@ -62,7 +62,7 @@ export default function Profile() {
   const [resolverModalState, setResolverModalState] = React.useState<constants.MainBodyState>(constants.modalTemplate) // Gateway modal state
   const [recordsState, setRecordsState] = React.useState<constants.MainBodyState>(constants.modalTemplate) // Records body state
   const [saltModalState, setSaltModalState] = React.useState<constants.MainSaltState>(constants.modalSaltTemplate) // Salt modal state
-  const [successModalState, setSuccessModalState] = React.useState<constants.MainSaltState>(constants.modalSaltTemplate)
+  const [, setSuccessModalState] = React.useState<constants.MainSaltState>(constants.modalSaltTemplate)
   // Variables
   const chain = process.env.NEXT_PUBLIC_NETWORK === 'mainnet' ? '1' : '5'
   const { address: _Wallet_ } = useAccount()
@@ -112,6 +112,17 @@ export default function Profile() {
     setSuccessModalState(prevState => ({ ...prevState, trigger: trigger }))
   }
 
+  // UTILS
+  const resetKeys = (inputObject: Record<string, any>): Record<string, any> => {
+    const updatedObject: Record<string, any> = {}
+    for (const key in inputObject) {
+      if (Object.prototype.hasOwnProperty.call(inputObject, key)) {
+        const updatedValue = { ...inputObject[key], new: '', signature: '', value: '...', loading: true }
+        updatedObject[key] = updatedValue;
+      }
+    }
+    return updatedObject
+  }
 
   // FUNCTIONS
   // Returns Owner of Wrapped or Manager of Legacy ENS Domain
@@ -157,7 +168,7 @@ export default function Profile() {
     let encoded: string
     let _value: string = ''
     let type: string = ''
-    if (['avatar', 'email', 'pubkey',
+    if (['avatar', 'description', 'email', 'pubkey',
       'com.github', 'url', 'com.twitter', 'com.discord', 'xyz.farcaster', 'nostr',
       'zonehash'
     ].includes(key)) {
@@ -199,7 +210,7 @@ export default function Profile() {
     // returns bytesToHexString(abi.encodePacked(keccak256(result)))
     let type: string = ''
     let _value: string = ''
-    if (['avatar', 'email', 'pubkey',
+    if (['avatar', 'description', 'email', 'pubkey',
       'com.github', 'url', 'com.twitter', 'com.discord', 'xyz.farcaster', 'nostr',
       'zonehash'
     ].includes(key)) {
@@ -235,7 +246,7 @@ export default function Profile() {
       let gasAmount: any
       if (key === 'contenthash') {
         gasAmount = await contract.methods.setContenthash(ethers.namehash(ENS), ensContent.encodeContentHash(value)).estimateGas({ from: _Wallet_ })
-      } else if (['avatar', 'email', 'pubkey',
+      } else if (['avatar', 'description', 'email', 'pubkey',
         'com.github', 'url', 'com.twitter', 'com.discord', 'xyz.farcaster', 'nostr',
         'zonehash'
       ].includes(key)) {
@@ -335,7 +346,7 @@ export default function Profile() {
   // Gets past ENS records upon request
   React.useEffect(() => {
     if (resolverModalState.trigger && constants.ensContracts.includes(resolverModalState.modalData)) {
-      const _getENSRecords = async () => {
+      const getENSRecords = async () => {
         try {
           setMessage('Importing')
           setLoading(true)
@@ -388,7 +399,6 @@ export default function Profile() {
                           _records['com.twitter'].value = _ensRecords.twitter
                           _records['com.discord'].value = _ensRecords.discord
                           setRecords(_records)
-                          setCache(_ensRecords)
                           setLoading(false)
                         })
                       })
@@ -402,20 +412,21 @@ export default function Profile() {
           console.error(error)
         }
       }
-      _getENSRecords()
+      getENSRecords()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolverModalState])
 
   // Sets ENS domain
   React.useEffect(() => {
-    const _getRecords = async () => {
+    const getRecords = async () => {
       if (resolver && ENS) {
         const _resolver = await ethers.EnsResolver.fromName(provider, ENS)
         const _avatarRaw = _resolver ? await getText(_resolver, 'avatar', records) : ''
-        const _contenthash = _resolver ? await getContenthash(_resolver, records) : ''
+        if (_resolver) await getContenthash(_resolver, records)
         let _avatar: string
-        let _records = { ...records }
+        let _records = Object.keys(cache).length > 0 ? { ...cache } : { ...records }
+        console.log(_records)
         if (_avatarRaw.startsWith('ipfs://')) {
           _records.avatar.value = _avatarRaw
           _records.avatar.source = `https://ipfs.io/ipfs/${_avatarRaw.split('ipfs://')[1]}`
@@ -437,18 +448,21 @@ export default function Profile() {
           setRecords(_records)
         } else {
           _avatar = _resolver ? await getAvatar(ENS, records) : ''
+          _records.avatar.source = _avatar
         }
-        const _addr = _resolver ? await getAddr(ENS, records) : ''
-        const _url = _resolver ? await getText(_resolver, 'url', records) : ''
-        const _description = _resolver ? await getText(_resolver, 'description', records) : ''
-        const _twitter = _resolver ? await getText(_resolver, 'com.twitter', records) : ''
-        const _discord = _resolver ? await getText(_resolver, 'com.discord', records) : ''
-        const _github = _resolver ? await getText(_resolver, 'com.github', records) : ''
-        const _getENSRecords = async () => {
+        if (_resolver) {
+          await getAddr(ENS, records)
+          await getText(_resolver, 'url', records)
+          await getText(_resolver, 'description', records)
+          await getText(_resolver, 'com.twitter', records)
+          await getText(_resolver, 'com.discord', records)
+          await getText(_resolver, 'com.github', records)
+        }
+        const getENSRecords = async () => {
           if (resolver && ENS) {
             if (resolver !== ccip2Contract) {
               if (constants.ensContracts.includes(resolver)) {
-                let _records = { ...records }
+                let _records = Object.keys(cache).length > 0 ? { ...cache } : { ...records }
                 _records.addr.ens = _records.addr.value
                 _records.avatar.ens = _records.avatar.value
                 _records.contenthash.ens = _records.contenthash.value
@@ -492,12 +506,29 @@ export default function Profile() {
             }
           }
         }
-        _getENSRecords()
+        if (Object.keys(cache).length === 0) getENSRecords()
       }
     }
-    _getRecords()
+    getRecords()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolver, ENS])
+  }, [resolver, ENS, cache])
+
+  // Trigger reset
+  React.useEffect(() => {
+    if (triggerRefresh) {
+      // Reset records
+      let _records = resetKeys({ ...records })
+      setCache(_records)
+      setRecords(_records)
+      // Reset metadata
+      let _meta = { ...meta }
+      _meta.signer = ''
+      _meta.signature = ''
+      setMeta(_meta)
+      setTriggerRefresh(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [triggerRefresh])
 
   // Sets new ENS Resolver
   const {
@@ -510,7 +541,7 @@ export default function Profile() {
     address: `0x${!meta.wrapped ? constants.ensConfig[0].addressOrName.slice(2) : constants.ensConfig[chain === '1' ? 7 : 3].addressOrName.slice(2)}`,
     abi: !meta.wrapped ? constants.ensConfig[0].contractInterface : constants.ensConfig[chain === '1' ? 7 : 3].contractInterface,
     functionName: 'setResolver',
-    args: [ENS ? ethers.namehash(ENS) : `${constants.randomString(10)}.eth`, ccip2Contract]
+    args: [ENS ? ethers.namehash(ENS) : '', ccip2Contract]
   })
   // Wagmi hook for awaiting transaction processing
   const { isSuccess: txSuccess, isError: txError, isLoading: txLoading } = useWaitForTransaction({
@@ -706,7 +737,7 @@ export default function Profile() {
     address: `0x${ccip2Config.addressOrName.slice(2)}`,
     abi: ccip2Config.contractInterface,
     functionName: 'getRecordhash',
-    args: [ENS ? ethers.namehash(ENS) : `${constants.randomString(10)}.eth`]
+    args: [ENS ? ethers.namehash(ENS) : '']
   })
 
   // Sets Metadata
@@ -723,13 +754,13 @@ export default function Profile() {
         _meta.wrapped = true
       }
       let _resolver: string
-      const _getResolver = async () => {
+      const loadResolver = async () => {
         _resolver = await getResolver(ENS)
         _meta.resolver = _resolver
         setMeta(_meta)
         setResolver(_resolver)
       }
-      _getResolver()
+      loadResolver()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_OwnerLegacy_, _ManagerLegacy_, _OwnerWrapped_])
@@ -813,7 +844,7 @@ export default function Profile() {
       if (sigCount === 1 && !signer[0]) {
         setMessage('Generating Signer')
         const keygen = async () => {
-          const _origin = `eth:${_Wallet_ || constants.zeroAddress}`
+          const _origin = origin
           const __keypair = await KEYGEN(_origin, caip10, signature, saltModalState.modalData)
           setSigner(__keypair)
           let _meta = { ...meta }
@@ -1352,7 +1383,13 @@ export default function Profile() {
                     icon={'free_breakfast'}
                     onClose={() => {
                       setGasModal(false)
-                      setLoading(false)
+                      setLoading(true)
+                      setMessage('Refreshing')
+                      setWrite(false)
+                      setTriggerRefresh(true)
+                      setTimeout(() => {
+                        setLoading(false)
+                      }, 2000)
                     }}
                     show={gasModal}
                   >
@@ -1371,6 +1408,13 @@ export default function Profile() {
                   <Error
                     onClose={() => {
                       setCrash(false)
+                      setLoading(true)
+                      setMessage('Refreshing')
+                      setWrite(false)
+                      setTriggerRefresh(true)
+                      setTimeout(() => {
+                        setLoading(false)
+                      }, 2000)
                     }}
                     color={color}
                     show={crash && !loading}

@@ -3,6 +3,7 @@ import { isMobile } from 'react-device-detect'
 import ReactDOM from 'react-dom'
 import styled from 'styled-components'
 import Help from './Help'
+import DateTimePicker from 'react-datetime-picker'
 import * as constants from '../utils/constants'
 
 interface ModalProps {
@@ -19,6 +20,7 @@ const DynamicAvatar: React.FC<ModalProps> = ({ mobile, show, onClose, dynamic, h
   const [browser, setBrowser] = React.useState(false)
   const [helpModal, setHelpModal] = React.useState(false)
   const [help, setHelp] = React.useState('')
+  const [color, setColor] = React.useState('lime') // Set color
 
   React.useLayoutEffect(() => {
     setBrowser(true)
@@ -33,7 +35,14 @@ const DynamicAvatar: React.FC<ModalProps> = ({ mobile, show, onClose, dynamic, h
     setRoster((prevRoster) => {
       const newRoster = [...prevRoster]
       const _unix = new Date(value)
-      newRoster[index].tick = Math.floor(_unix.getTime() / 1000)
+      const _timestamp = new (Date.now() as any)
+      const _currentTime = Math.floor(_timestamp / 1000)
+      if (_unix) {
+        let _unixTime = Math.floor(_unix.getTime() / 1000)
+        if (_unixTime > _currentTime) {
+          newRoster[index].tick = _unixTime
+        }
+      }
       return newRoster
     })
   }
@@ -143,7 +152,6 @@ const DynamicAvatar: React.FC<ModalProps> = ({ mobile, show, onClose, dynamic, h
                       key={`left-${instance.index}`}
                       placeholder={'...'}
                       type='datetime-local'
-                      value={String((new Date(roster[instance.index].tick * 1000)).toISOString().substring(0, (new Date().toISOString().indexOf("T") | 0) + 6 | 0))}
                       onChange={(e) => {
                         updateRosterTick(instance.index, e.target.value)
                       }}

@@ -23,14 +23,13 @@ const Records: React.FC<RecordsContainerProps> = ({ meta, records, hue, handleMo
   const { address: _Wallet_ } = useAccount()
   const [helpModal, setHelpModal] = React.useState(false)
   const [help, setHelp] = React.useState('')
-  const [color, setColor] = React.useState('lime') // Set color
   const [inputValue, setInputValue] = React.useState(records)
   const [roster, setRoster] = React.useState(constants.dynamicRoster.map(item => ({ ...item })))
   const [mobile, setMobile] = React.useState(false) // Set mobile or dekstop environment 
   const { width, height } = useWindowDimensions() // Get window dimensions
   const [avatarModalState, setAvatarModalState] = React.useState<constants.MainBodyState>(constants.modalTemplate) // Avatar modal state
   const [avatarModal, setAvatarModal] = React.useState(false) // Avatar modal
-
+  console.log(records)
   // Handle Avatar modal data return
   const handleAvatarModalData = (data: string) => {
     setAvatarModalState(prevState => ({ ...prevState, modalData: data }))

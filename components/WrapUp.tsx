@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { isMobile } from 'react-device-detect'
 
 function sumValues(obj: { [key: string]: number }): number {
-  let total = 0;
+  let total = 0.0;
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
       total += obj[key];
@@ -112,7 +112,7 @@ const GasSavings: React.FC<GasSavings> = ({ icon, color, show, onClose, children
                 color: 'lime'
               }}
             >
-              {sumValues(children).toPrecision(3)}
+              { Object.keys(children).length > 0 && sumValues(children) !== 0 ? sumValues(children).toPrecision(3) : 0}
               &nbsp;
               <span
                 style={{
