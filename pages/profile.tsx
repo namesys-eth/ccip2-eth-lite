@@ -1,7 +1,6 @@
 import Head from "next/head";
 import React from "react";
 import styles from "./page.module.css";
-import "./index.css";
 import { useRouter } from "next/router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ethers } from "ethers";

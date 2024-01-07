@@ -5,7 +5,6 @@ import styles from "./page.module.css";
 import SearchBox from "../components/Search";
 import Loading from "../components/Loading";
 import { isMobile } from "react-device-detect";
-import "./index.css";
 
 export default function Home() {
   const router = useRouter();

@@ -3,7 +3,6 @@ import { isMobile } from "react-device-detect";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import Help from "./Help";
-import DateTimePicker from "react-datetime-picker";
 import * as constants from "../utils/constants";
 
 interface ModalProps {
