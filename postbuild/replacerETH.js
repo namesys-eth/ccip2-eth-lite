@@ -1,12 +1,11 @@
-const replace = require('replace-in-file')
+const replace = require("replace-in-file");
 const optionsCSS = {
-  files: './out/_next/static/css/*.css',
+  files: "./out/_next/static/css/*.css",
   from: [/webpack:\/\/\/mini-css-extract-plugin/g],
-  to: ['https://lite.namesys.eth.limo'],
+  to: ["https://lite.namesys.eth.limo"],
 };
 (async function () {
   try {
-    const resultsCSS = await replace(optionsCSS)
-  } catch (error) {
-  }
-})()
+    const resultsCSS = await replace(optionsCSS);
+  } catch (error) {}
+})();

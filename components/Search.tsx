@@ -1,44 +1,44 @@
-import React, { useState } from "react"
-import { isMobile } from 'react-device-detect'
+import React, { useState } from "react";
+import { isMobile } from "react-device-detect";
 
 interface SearchBoxProps {
-  onSearch: (query: string) => void
+  onSearch: (query: string) => void;
 }
 
 const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState("");
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.target.value.toLowerCase())
+    setQuery(event.target.value.toLowerCase());
   };
 
   const handleInputInvalid = (event: React.ChangeEvent<HTMLInputElement>) => {
-    event.target.setCustomValidity("Please enter a valid .eth name")
+    event.target.setCustomValidity("Please enter a valid .eth name");
   };
 
   const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    event.target.setCustomValidity("")
+    event.target.setCustomValidity("");
   };
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    onSearch(query)
-  }
+    event.preventDefault();
+    onSearch(query);
+  };
 
   return (
     <form
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        flexDirection: 'column'
+        display: "flex",
+        alignItems: "center",
+        flexDirection: "column",
       }}
       onSubmit={handleFormSubmit}
     >
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          flexDirection: 'row'
+          display: "flex",
+          alignItems: "center",
+          flexDirection: "row",
         }}
       >
         <input
@@ -55,30 +55,30 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
           pattern=".*\.eth$"
           title="❗ Input must end with '.eth'"
           style={{
-            fontFamily: query ? 'SF Mono' : 'Spotnik',
-            fontWeight: '600',
-            fontSize: query ? '21px' : '19px',
-            paddingTop: query ? '8px' : '15px',
-            paddingBottom: query ? '8px' : '15px',
-            color: !query ? 'rgb(255, 255, 255, 0.20)' : 'white'
+            fontFamily: query ? "SF Mono" : "Spotnik",
+            fontWeight: "600",
+            fontSize: query ? "21px" : "19px",
+            paddingTop: query ? "8px" : "15px",
+            paddingBottom: query ? "8px" : "15px",
+            color: !query ? "rgb(255, 255, 255, 0.20)" : "white",
           }}
         />
         <button
           className="button"
           style={{
-            height: '46px',
-            width: '80px',
-            marginLeft: '20px'
+            height: "46px",
+            width: "80px",
+            marginLeft: "20px",
           }}
           type="submit"
-          data-tooltip='Search'
+          data-tooltip="Search"
           disabled={!query.length}
         >
           <span
             className="material-icons"
             style={{
-              fontSize: '28px',
-              fontWeight: '700'
+              fontSize: "28px",
+              fontWeight: "700",
             }}
           >
             search
@@ -89,4 +89,4 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
   );
 };
 
-export default SearchBox
+export default SearchBox;

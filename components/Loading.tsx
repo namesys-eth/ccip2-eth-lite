@@ -1,12 +1,11 @@
 import React from "react";
 
 interface Props {
-  height: number,
-  width: number
+  height: number;
+  width: number;
 }
 
 const ColorsLoadingIcon: React.FC<Props> = ({ height, width }) => {
-  
   const svgString = `
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 278 278" width="${width}mm" height="${height}mm">
       <defs>
@@ -31,7 +30,7 @@ const ColorsLoadingIcon: React.FC<Props> = ({ height, width }) => {
       </g>
     </svg>
   `;
-  
+
   return <div dangerouslySetInnerHTML={{ __html: svgString }} />;
 };
 
