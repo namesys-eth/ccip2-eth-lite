@@ -14,7 +14,7 @@ export default function Home() {
   // Triggers search of ENS domain
   const handleNameSearch = (query: string) => {
     setLoading(true);
-    router.push(`/profile?query=${query}`);
+    router.push(`/profile${process.env.NODE_ENV === 'production' ? '.html' : ''}?query=${query}`);
   };
 
   // INIT

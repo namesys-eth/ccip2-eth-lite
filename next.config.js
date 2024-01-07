@@ -4,8 +4,8 @@ const nextConfig = {
   distDir: "out",
   output: env === "production" ? "export" : "standalone",
   reactStrictMode: true,
-  basePath: env !== "production" ? "" : "/ccip2-eth-lite",
-  assetPrefix: env !== "production" ? "" : "/ccip2-eth-lite/",
+  basePath: env !== "production" ? "" : "",
+  assetPrefix: env !== "production" ? "" : "",
   ...(env === "production" && {
     images: {
       loader: "akamai",
