@@ -3,7 +3,7 @@ import { isMobile } from "react-device-detect";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import Help from "./Help";
-import * as constants from "../utils/constants";
+import * as C from "../utils/constants";
 
 interface ModalProps {
   show: boolean;
@@ -128,7 +128,7 @@ const ResolverModal: React.FC<ModalProps> = ({
               width: "100%",
               wordWrap: "break-word",
               textAlign: "left",
-              color: constants.isAddr(inputValue)
+              color: C.isAddr(inputValue)
                 ? "lightgreen"
                 : "rgb(255, 255, 255, 1)",
               cursor: "copy",
@@ -144,7 +144,7 @@ const ResolverModal: React.FC<ModalProps> = ({
             }}
             onClick={handleSubmit}
             data-tooltip="Confirm"
-            disabled={!constants.isAddr(inputValue)}
+            disabled={!C.isAddr(inputValue)}
           >
             <div
               className="flex-row"

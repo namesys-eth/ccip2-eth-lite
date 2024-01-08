@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 import { useRouter } from "next/router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ethers } from "ethers";
-import * as constants from "../utils/constants";
+import * as C from "../utils/constants";
 import { isMobile } from "react-device-detect";
 import Loading from "../components/Loading";
 import { AbiItem } from "web3-utils";
@@ -47,33 +47,33 @@ export default function Profile() {
   const [saltModal, setSaltModal] = React.useState(false); // Salt (password/key-identifier)
   const [successModal, setSuccessModal] = React.useState(false); // Success modal trigger
   const [signer, setSigner] = React.useState(["", ""]); // Set signer keypair [priv, pub]
-  const [cache, setCache] = React.useState<constants.RecordsType>({}); // Set cache
+  const [cache, setCache] = React.useState<C.RecordsType>({}); // Set cache
   const [message, setMessage] = React.useState("Loading"); // Set message to display
   const [justMigrated, setJustMigrated] = React.useState(false); // Set migrated flag
   const [canUse, setCanUse] = React.useState(false); // Set import flag
   const [resolverModal, setResolverModal] = React.useState(false); // Resolver modal
-  const [records, setRecords] = React.useState<constants.RecordsType>(
-    constants.records
-  ); // Set records
-  const [meta, setMeta] = React.useState(constants.meta); // Set ENS metadata
+  const [records, setRecords] = React.useState<C.RecordsType>(C.records); // Set records
+  const [meta, setMeta] = React.useState(C.meta); // Set ENS metadata
   const [tokenIDLegacy, setTokenIDLegacy] = React.useState(""); // Set Token ID of unwrapped/legacy name
   const [namehashLegacy, setNamehashLegacy] = React.useState(""); // Legacy Namehash of ENS Domain
   const [tokenIDWrapper, setTokenIDWrapper] = React.useState(""); // Set Token ID of wrapped name
   const [loading, setLoading] = React.useState(true); // Loading Records marker
   const [resolverModalState, setResolverModalState] =
-    React.useState<constants.MainBodyState>(constants.modalTemplate); // Gateway modal state
-  const [recordsState, setRecordsState] =
-    React.useState<constants.MainBodyState>(constants.modalTemplate); // Records body state
-  const [saltModalState, setSaltModalState] =
-    React.useState<constants.MainSaltState>(constants.modalSaltTemplate); // Salt modal state
-  const [, setSuccessModalState] = React.useState<constants.MainSaltState>(
-    constants.modalSaltTemplate
+    React.useState<C.MainBodyState>(C.modalTemplate); // Gateway modal state
+  const [recordsState, setRecordsState] = React.useState<C.MainBodyState>(
+    C.modalTemplate
+  ); // Records body state
+  const [saltModalState, setSaltModalState] = React.useState<C.MainSaltState>(
+    C.modalSaltTemplate
+  ); // Salt modal state
+  const [, setSuccessModalState] = React.useState<C.MainSaltState>(
+    C.modalSaltTemplate
   );
   // Variables
   const chain = process.env.NEXT_PUBLIC_NETWORK === "mainnet" ? "1" : "5";
   const { address: _Wallet_ } = useAccount();
-  const ccip2Contract = constants.ccip2[chain === "1" ? 1 : 0];
-  const ccip2Config = constants.ccip2Config[chain === "1" ? 1 : 0];
+  const ccip2Contract = C.ccip2[chain === "1" ? 1 : 0];
+  const ccip2Config = C.ccip2Config[chain === "1" ? 1 : 0];
   const apiKey =
     chain === "1"
       ? process.env.NEXT_PUBLIC_ALCHEMY_ID_MAINNET
@@ -84,7 +84,7 @@ export default function Profile() {
   const web3 = new Web3(alchemyEndpoint);
   const recoveredAddress = React.useRef<string>();
   const caip10 = `eip155:${chain}:${_Wallet_}`; // CAIP-10
-  const origin = `eth:${_Wallet_ || constants.zeroAddress}`;
+  const origin = `eth:${_Wallet_ || C.zeroAddress}`;
   const PORT = process.env.NEXT_PUBLIC_PORT;
   const SERVER = process.env.NEXT_PUBLIC_SERVER;
 
@@ -122,8 +122,8 @@ export default function Profile() {
   };
 
   // UTILS
-  const resetKeys = (records: constants.RecordsType): constants.RecordsType => {
-    const resetRecords: constants.RecordsType = {};
+  const resetKeys = (records: C.RecordsType): C.RecordsType => {
+    const resetRecords: C.RecordsType = {};
     for (const key in records) {
       if (Object.prototype.hasOwnProperty.call(records, key)) {
         const resetValue = {
@@ -143,15 +143,13 @@ export default function Profile() {
   // Returns Owner of Wrapped or Manager of Legacy ENS Domain
   function getManager() {
     if (_OwnerLegacy_ && _ManagerLegacy_) {
-      if (
-        String(_OwnerLegacy_) === constants.ensContracts[chain === "1" ? 7 : 3]
-      ) {
-        return _OwnerWrapped_ ? String(_OwnerWrapped_) : constants.zeroAddress;
+      if (String(_OwnerLegacy_) === C.ensContracts[chain === "1" ? 7 : 3]) {
+        return _OwnerWrapped_ ? String(_OwnerWrapped_) : C.zeroAddress;
       } else {
         return String(_ManagerLegacy_);
       }
     } else {
-      return constants.zeroAddress;
+      return C.zeroAddress;
     }
   }
   // Whether connector is authorised to write
@@ -160,12 +158,12 @@ export default function Profile() {
       !_Wallet_ ||
       (!meta.wrapped && _Wallet_ !== meta.owner) ||
       (meta.wrapped && _Wallet_ !== meta.manager) ||
-      meta.resolver !== constants.ccip2[meta.chainId === 5 ? 0 : 1]
+      meta.resolver !== C.ccip2[meta.chainId === 5 ? 0 : 1]
     );
   }
 
   // Counts live values of update
-  function countVal(records: constants.RecordsType) {
+  function countVal(records: C.RecordsType) {
     let nonEmptyNewCount = 0;
     for (const key in records) {
       if (records.hasOwnProperty(key) && records[key].new !== "") {
@@ -177,7 +175,7 @@ export default function Profile() {
 
   // Sign a record
   async function signRecord(
-    records: constants.RecordsType,
+    records: C.RecordsType,
     _signer: ethers.Wallet,
     _type: string
   ) {
@@ -240,7 +238,7 @@ export default function Profile() {
       _value = value;
     }
     let _result = ethers.AbiCoder.defaultAbiCoder().encode([type], [_value]);
-    let _ABI = [constants.signedRecord];
+    let _ABI = [C.signedRecord];
     let _interface = new ethers.Interface(_ABI);
     let _encodedWithSelector = _interface.encodeFunctionData("signedRecord", [
       signer,
@@ -303,9 +301,8 @@ export default function Profile() {
   async function getGas(key: string, value: string) {
     const getGasAmountForContractCall = async () => {
       const contract = new web3.eth.Contract(
-        constants.ensConfig[chain === "1" ? 6 : 6]
-          .contractInterface as AbiItem[],
-        constants.ensConfig[chain === "1" ? 6 : 6].addressOrName
+        C.ensConfig[chain === "1" ? 6 : 6].contractInterface as AbiItem[],
+        C.ensConfig[chain === "1" ? 6 : 6].addressOrName
       );
       let gasAmount: any;
       if (key === "contenthash") {
@@ -387,7 +384,7 @@ export default function Profile() {
     const request = {
       ens: ENS,
       controller: _Wallet_,
-      manager: meta.signer || constants.zeroAddress,
+      manager: meta.signer || C.zeroAddress,
       managerSignature: meta.signature,
       revision: {},
       chain: chain,
@@ -454,21 +451,20 @@ export default function Profile() {
   React.useEffect(() => {
     if (
       resolverModalState.trigger &&
-      constants.ensContracts.includes(resolverModalState.modalData)
+      C.ensContracts.includes(resolverModalState.modalData)
     ) {
       const getENSRecords = async () => {
         try {
           setMessage("Importing");
           setLoading(true);
           const contract = new web3.eth.Contract(
-            constants.ensConfig[
-              constants.ensContracts.indexOf(resolverModalState.modalData)
-            ].contractInterface as AbiItem[],
-            constants.ensConfig[
-              constants.ensContracts.indexOf(resolverModalState.modalData)
+            C.ensConfig[C.ensContracts.indexOf(resolverModalState.modalData)]
+              .contractInterface as AbiItem[],
+            C.ensConfig[
+              C.ensContracts.indexOf(resolverModalState.modalData)
             ].addressOrName
           );
-          let _ensRecords = { ...constants.ensRecords };
+          let _ensRecords = { ...C.ensRecords };
           await contract.methods
             .contenthash(ethers.namehash(ENS))
             .call()
@@ -589,7 +585,6 @@ export default function Profile() {
         let _avatar: string;
         let _records =
           Object.keys(cache).length > 0 ? { ...cache } : { ...records };
-        console.log(_records);
         if (_avatarRaw.startsWith("ipfs://")) {
           _records.avatar.value = _avatarRaw;
           _records.avatar.source = `https://ipfs.io/ipfs/${
@@ -599,7 +594,7 @@ export default function Profile() {
         } else if (_avatarRaw.startsWith(`eip155:${chain}`)) {
           let _contract = _avatarRaw.split(":")[2].split("/")[0];
           let _tokenID = _avatarRaw.split(":")[2].split("/")[1];
-          constants.alchemy.nft
+          C.alchemy.nft
             .getNftMetadata(_contract, _tokenID)
             .then((_response: any) => {
               _records.avatar.value = _avatarRaw;
@@ -626,7 +621,7 @@ export default function Profile() {
         const getENSRecords = async () => {
           if (resolver && ENS) {
             if (resolver !== ccip2Contract) {
-              if (constants.ensContracts.includes(resolver)) {
+              if (C.ensContracts.includes(resolver)) {
                 let _records =
                   Object.keys(cache).length > 0 ? { ...cache } : { ...records };
                 _records.addr.ens = _records.addr.value;
@@ -646,7 +641,7 @@ export default function Profile() {
                   _Recordhash_ !== _Ownerhash_
                 ) {
                   let _String: string = "";
-                  if (String(_Recordhash_).startsWith(constants.ipnsPrefix)) {
+                  if (String(_Recordhash_).startsWith(C.ipnsPrefix)) {
                     let _this = ensContent.decodeContentHash(
                       `0x${String(_Recordhash_)}`
                     );
@@ -656,7 +651,7 @@ export default function Profile() {
                   }
                   if (
                     _String.startsWith("https://") &&
-                    _String === constants.defaultGateway
+                    _String === C.defaultGateway
                   ) {
                     setCanUse(true);
                   }
@@ -666,7 +661,7 @@ export default function Profile() {
                 ) {
                   if (resolver === ccip2Contract) {
                     let _String: string = "";
-                    if (String(_Ownerhash_).startsWith(constants.ipnsPrefix)) {
+                    if (String(_Ownerhash_).startsWith(C.ipnsPrefix)) {
                       let _this = ensContent.decodeContentHash(
                         `0x${String(_Ownerhash_)}`
                       );
@@ -676,7 +671,7 @@ export default function Profile() {
                     }
                     if (
                       _String.startsWith("https://") &&
-                      _String === constants.defaultGateway
+                      _String === C.defaultGateway
                     ) {
                       setCanUse(true);
                     }
@@ -688,7 +683,7 @@ export default function Profile() {
             }
           }
         };
-        if (Object.keys(cache).length === 0) getENSRecords();
+        getENSRecords();
       }
     };
     getRecords();
@@ -722,12 +717,12 @@ export default function Profile() {
   } = useContractWrite({
     address: `0x${
       !meta.wrapped
-        ? constants.ensConfig[0].addressOrName.slice(2)
-        : constants.ensConfig[chain === "1" ? 7 : 3].addressOrName.slice(2)
+        ? C.ensConfig[0].addressOrName.slice(2)
+        : C.ensConfig[chain === "1" ? 7 : 3].addressOrName.slice(2)
     }`,
     abi: !meta.wrapped
-      ? constants.ensConfig[0].contractInterface
-      : constants.ensConfig[chain === "1" ? 7 : 3].contractInterface,
+      ? C.ensConfig[0].contractInterface
+      : C.ensConfig[chain === "1" ? 7 : 3].contractInterface,
     functionName: "setResolver",
     args: [ENS ? ethers.namehash(ENS) : "", ccip2Contract],
   });
@@ -794,17 +789,17 @@ export default function Profile() {
       if (_response?.address) {
         return _response.address;
       } else {
-        return constants.zeroAddress;
+        return C.zeroAddress;
       }
     } catch {
-      return constants.zeroAddress;
+      return C.zeroAddress;
     }
   }
 
   // Get Contenhash
   async function getContenthash(
     resolver: ethers.EnsResolver,
-    _records: constants.RecordsType
+    _records: C.RecordsType
   ) {
     const _records_ = { ..._records };
     try {
@@ -829,7 +824,7 @@ export default function Profile() {
   }
 
   // Get Avatar
-  async function getAvatar(_ENS: string, _records: constants.RecordsType) {
+  async function getAvatar(_ENS: string, _records: C.RecordsType) {
     const _records_ = { ..._records };
     try {
       const _avatar = await provider.getAvatar(_ENS);
@@ -853,7 +848,7 @@ export default function Profile() {
   }
 
   // Get Address for ENS domain
-  async function getAddr(_ENS: string, _records: constants.RecordsType) {
+  async function getAddr(_ENS: string, _records: C.RecordsType) {
     const _records_ = { ..._records };
     try {
       const _addr = await provider.resolveName(_ENS);
@@ -880,7 +875,7 @@ export default function Profile() {
   async function getText(
     resolver: ethers.EnsResolver,
     _key: string,
-    _records: constants.RecordsType
+    _records: C.RecordsType
   ) {
     const _records_ = { ..._records };
     try {
@@ -911,8 +906,8 @@ export default function Profile() {
     isLoading: legacyOwnerLoading,
     isError: legacyOwnerError,
   } = useContractRead({
-    address: `0x${constants.ensConfig[1].addressOrName.slice(2)}`,
-    abi: constants.ensConfig[1].contractInterface,
+    address: `0x${C.ensConfig[1].addressOrName.slice(2)}`,
+    abi: C.ensConfig[1].contractInterface,
     functionName: "ownerOf",
     args: [tokenIDLegacy],
   });
@@ -922,8 +917,8 @@ export default function Profile() {
     isLoading: legacyManagerLoading,
     isError: legacyManagerError,
   } = useContractRead({
-    address: `0x${constants.ensConfig[0].addressOrName.slice(2)}`,
-    abi: constants.ensConfig[0].contractInterface,
+    address: `0x${C.ensConfig[0].addressOrName.slice(2)}`,
+    abi: C.ensConfig[0].contractInterface,
     functionName: "owner",
     args: [namehashLegacy],
   });
@@ -933,10 +928,8 @@ export default function Profile() {
     isLoading: wrapperOwnerLoading,
     isError: wrapperOwnerError,
   } = useContractRead({
-    address: `0x${constants.ensConfig[
-      chain === "1" ? 7 : 3
-    ].addressOrName.slice(2)}`,
-    abi: constants.ensConfig[chain === "1" ? 7 : 3].contractInterface,
+    address: `0x${C.ensConfig[chain === "1" ? 7 : 3].addressOrName.slice(2)}`,
+    abi: C.ensConfig[chain === "1" ? 7 : 3].contractInterface,
     functionName: "ownerOf",
     args: [tokenIDWrapper],
   });
@@ -957,11 +950,11 @@ export default function Profile() {
 
   // Sets Metadata
   React.useEffect(() => {
-    if (_OwnerLegacy_ && _OwnerLegacy_ !== constants.zeroAddress) {
+    if (_OwnerLegacy_ && _OwnerLegacy_ !== C.zeroAddress) {
       let _meta = { ...meta };
       _meta.owner = String(_OwnerLegacy_);
-      if (String(_OwnerLegacy_) !== constants.ensContracts[7]) {
-        if (_ManagerLegacy_ && _ManagerLegacy_ !== constants.zeroAddress) {
+      if (String(_OwnerLegacy_) !== C.ensContracts[7]) {
+        if (_ManagerLegacy_ && _ManagerLegacy_ !== C.zeroAddress) {
           _meta.manager = String(_ManagerLegacy_);
         }
       } else {
@@ -1054,7 +1047,7 @@ export default function Profile() {
   React.useEffect(() => {
     if (recordsState.trigger && recordsState.modalData) {
       let _allRecords = JSON.parse(recordsState.modalData);
-      let _records: constants.RecordsType = { ...records };
+      let _records: C.RecordsType = { ...records };
       for (var i = 0; i < _allRecords.length; i++) {
         _records[_allRecords[i].id] = _allRecords[i];
       }
@@ -1210,10 +1203,10 @@ export default function Profile() {
       // Generate POST request for writing records
       const request = {
         signatures: signatures,
-        manager: meta.signer || constants.zeroAddress,
+        manager: meta.signer || C.zeroAddress,
         managerSignature: meta.signature,
         ens: ENS,
-        controller: _Wallet_ || constants.zeroAddress,
+        controller: _Wallet_ || C.zeroAddress,
         ipns: "",
         recordsTypes: newKeys,
         recordsValues: encodedValues,
@@ -1493,7 +1486,7 @@ export default function Profile() {
                           className="mono"
                           id="metaResolver"
                           onClick={() =>
-                            constants.copyToClipboard(
+                            C.copyToClipboard(
                               meta.resolver,
                               "none",
                               "metaResolver"
@@ -1501,13 +1494,13 @@ export default function Profile() {
                           }
                         >
                           {mobile
-                            ? constants.truncateHexString(meta.resolver)
+                            ? C.truncateHexString(meta.resolver)
                             : meta.resolver}
                         </span>
                         <img
                           alt="logo-2"
                           src={
-                            constants.ensContracts.includes(resolver)
+                            C.ensContracts.includes(resolver)
                               ? "ens.png"
                               : resolver === ccip2Contract
                               ? "logo.png"
@@ -1522,16 +1515,12 @@ export default function Profile() {
                           className="mono"
                           id="metaOwner"
                           onClick={() =>
-                            constants.copyToClipboard(
-                              meta.owner,
-                              "none",
-                              "metaOwner"
-                            )
+                            C.copyToClipboard(meta.owner, "none", "metaOwner")
                           }
                           color=""
                         >
                           {mobile
-                            ? constants.truncateHexString(meta.owner)
+                            ? C.truncateHexString(meta.owner)
                             : meta.owner}
                         </span>
                       </div>
@@ -1540,7 +1529,7 @@ export default function Profile() {
                           className="mono"
                           id="metaManager"
                           onClick={() =>
-                            constants.copyToClipboard(
+                            C.copyToClipboard(
                               meta.manager,
                               "none",
                               "metaManager"
@@ -1548,7 +1537,7 @@ export default function Profile() {
                           }
                         >
                           {mobile
-                            ? constants.truncateHexString(meta.manager)
+                            ? C.truncateHexString(meta.manager)
                             : meta.manager}
                         </span>
                       </div>

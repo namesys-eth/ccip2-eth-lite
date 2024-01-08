@@ -54,7 +54,7 @@ const githubRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
 const twitterRegex = /^[A-Za-z][A-Za-z0-9_]{0,14}$/;
 const zonehashRegex = /^0x[a-fA-F0-9]+$/;
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const discordRegex = /^.{3,32}#[0-9]{4}$/;
+const discordRegex = /^(?![_\.])[a-z0-9_.]{3,32}(?<![_\.])$|^.{3,32}#[0-9]{4}$/;
 const farcasterRegex = /^[a-z0-9][a-z0-9-]{0,15}$/;
 const btcRegex =
   /^(1[a-km-zA-HJ-NP-Z1-9]{25,34})|(3[a-km-zA-HJ-NP-Z1-9]{25,34})|(bc1[a-zA-HJ-NP-Z0-9]{6,87})$/;
@@ -77,26 +77,37 @@ export function randomString(length: number) {
   return result;
 }
 
+export type DynamicRosterItem = {
+  index: number;
+  tick: number;
+  time: string;
+  value: string;
+};
+
 // Dynamic Avatar schedule
 export const dynamicRoster = [
   {
     index: 0,
     tick: 0,
+    time: "",
     value: "",
   },
   {
     index: 1,
-    tick: 1,
+    tick: 0,
+    time: "",
     value: "",
   },
   {
     index: 2,
-    tick: 2,
+    tick: 0,
+    time: "",
     value: "",
   },
   {
     index: 3,
-    tick: 3,
+    tick: 0,
+    time: "",
     value: "",
   },
 ];

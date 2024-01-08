@@ -2,12 +2,12 @@ import React from "react";
 import styles from "../pages/page.module.css";
 import { isMobile } from "react-device-detect";
 import { useWindowDimensions } from "../hooks/useWindowDimensions";
-import * as constants from "../utils/constants";
+import * as C from "../utils/constants";
 import Help from "../components/Help";
 import DynamicAvatar from "./Dynamic";
 import { useAccount } from "wagmi";
 
-export interface Record extends constants.recordType {}
+export interface Record extends C.recordType {}
 
 interface RecordsContainerProps {
   meta: any;
@@ -29,14 +29,14 @@ const Records: React.FC<RecordsContainerProps> = ({
   const [help, setHelp] = React.useState("");
   const [inputValue, setInputValue] = React.useState(records);
   const [roster, setRoster] = React.useState(
-    constants.dynamicRoster.map((item) => ({ ...item }))
+    C.dynamicRoster.map((item) => ({ ...item }))
   );
   const [mobile, setMobile] = React.useState(false); // Set mobile or dekstop environment
   const { width, height } = useWindowDimensions(); // Get window dimensions
   const [avatarModalState, setAvatarModalState] =
-    React.useState<constants.MainBodyState>(constants.modalTemplate); // Avatar modal state
+    React.useState<C.MainBodyState>(C.modalTemplate); // Avatar modal state
   const [avatarModal, setAvatarModal] = React.useState(false); // Avatar modal
-  console.log(records);
+
   // Handle Avatar modal data return
   const handleAvatarModalData = (data: string) => {
     setAvatarModalState((prevState) => ({ ...prevState, modalData: data }));
@@ -52,7 +52,7 @@ const Records: React.FC<RecordsContainerProps> = ({
       !_Wallet_ ||
       (!meta.wrapped && _Wallet_ !== meta.owner) ||
       (meta.wrapped && _Wallet_ !== meta.manager) ||
-      meta.resolver !== constants.ccip2[meta.chainId === 5 ? 0 : 1]
+      meta.resolver !== C.ccip2[meta.chainId === 5 ? 0 : 1]
     );
   }
 
@@ -64,7 +64,7 @@ const Records: React.FC<RecordsContainerProps> = ({
   // Counts live values of update
   function countVal() {
     return inputValue.filter((_record) =>
-      constants.isGoodValue(_record.id, _record.new)
+      C.isGoodValue(_record.id, _record.new)
     ).length;
   }
 
@@ -89,7 +89,7 @@ const Records: React.FC<RecordsContainerProps> = ({
     if (avatarModalState.trigger) {
       setRoster(JSON.parse(avatarModalState.modalData));
     } else {
-      setRoster(constants.dynamicRoster.map((item) => ({ ...item })));
+      setRoster(C.dynamicRoster.map((item) => ({ ...item })));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatarModalState]);
@@ -241,7 +241,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                     onClick={() => {}}
                     data-tooltip={
                       getVal(record.id) &&
-                      constants.isGoodValue(record.id, getVal(record.id))
+                      C.isGoodValue(record.id, getVal(record.id))
                         ? "Legit Value"
                         : !getVal(record.id)
                         ? ""
@@ -253,7 +253,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                       style={{
                         color:
                           getVal(record.id) &&
-                          constants.isGoodValue(record.id, getVal(record.id))
+                          C.isGoodValue(record.id, getVal(record.id))
                             ? "lime"
                             : !getVal(record.id)
                             ? "transparent"
@@ -262,7 +262,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                       }}
                     >
                       {getVal(record.id) &&
-                      constants.isGoodValue(record.id, getVal(record.id))
+                      C.isGoodValue(record.id, getVal(record.id))
                         ? "check_circle_outline"
                         : "info_outline"}
                     </div>
@@ -298,11 +298,9 @@ const Records: React.FC<RecordsContainerProps> = ({
                       width: "auto",
                       marginBottom: "6px",
                     }}
-                    disabled={
-                      !constants.isGoodValue(record.id, getVal(record.id))
-                    }
+                    disabled={!C.isGoodValue(record.id, getVal(record.id))}
                     hidden={
-                      !constants.isGoodValue(record.id, getVal(record.id)) ||
+                      !C.isGoodValue(record.id, getVal(record.id)) ||
                       countVal() > 1
                     }
                     onClick={handleSubmit}
@@ -328,8 +326,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                   type="text"
                   value={
                     canManage() ||
-                    meta.resolver ===
-                      constants.ccip2[meta.chainId === 5 ? 0 : 1]
+                    meta.resolver === C.ccip2[meta.chainId === 5 ? 0 : 1]
                       ? getVal(record.id)
                       : record.value
                   }
@@ -339,8 +336,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                   disabled={unauthorised()}
                   style={{
                     background:
-                      meta.resolver ===
-                      constants.ccip2[meta.chainId === 5 ? 0 : 1]
+                      meta.resolver === C.ccip2[meta.chainId === 5 ? 0 : 1]
                         ? "#082400"
                         : "#361a17",
                     outline: "none",
@@ -356,7 +352,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                     textAlign: "left",
                     color:
                       record.value !== "..." &&
-                      constants.isGoodValue(record.id, getVal(record.id))
+                      C.isGoodValue(record.id, getVal(record.id))
                         ? "lime"
                         : hue,
                     cursor: "copy",
@@ -376,7 +372,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                       getVal(record.id) !== "" || !record.value ? "0" : "1",
                   }}
                   onClick={() =>
-                    constants.copyToClipboard(
+                    C.copyToClipboard(
                       `${record.value}`,
                       `${record.id}`,
                       `${record.id}-${record.type}`
