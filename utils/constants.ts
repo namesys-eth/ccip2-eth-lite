@@ -581,3 +581,17 @@ export function isContenthash(value: string) {
     (prefixOnion === "onion://" && onionRegex.test(value.substring(8))) // Check Onion v2 & v3
   );
 }
+
+// Calculates labelhash for legacy subdomains
+export function calculateLabelhash(subdomain: string) {
+  let index: number = -1;
+  if (subdomain.split(".").length === 2) {
+    index = 0;
+  } else if (subdomain.split(".").length > 2) {
+    // [!] hack limited to parent access on zero-level
+    index = 1;
+  }
+  return index >= 0
+    ? ethers.keccak256(ethers.toUtf8Bytes(subdomain.split(".")[index]))
+    : zeroBytes;
+}

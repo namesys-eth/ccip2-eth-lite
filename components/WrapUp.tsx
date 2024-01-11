@@ -118,9 +118,7 @@ const GasSavings: React.FC<GasSavings> = ({
                 color: "lime",
               }}
             >
-              {Object.keys(children).length > 0 && sumValues(children) !== 0
-                ? sumValues(children).toPrecision(3)
-                : 0}
+              {sumValues(children).toPrecision(3)}
               &nbsp;
               <span
                 style={{

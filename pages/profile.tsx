@@ -149,7 +149,41 @@ export default function Profile() {
         return String(_ManagerLegacy_);
       }
     } else {
+      if (
+        !_OwnerLegacy_ &&
+        String(_ManagerLegacy_) === C.ensContracts[chain === "1" ? 7 : 3]
+      ) {
+        return String(_OwnerWrapped_);
+      }
       return C.zeroAddress;
+    }
+  }
+  // Returns Account allowed to manage/edit NameSys records
+  function getRecordEditor() {
+    if (
+      _OwnerWrapped_ &&
+      _ManagerLegacy_ &&
+      String(_OwnerWrapped_) !== C.zeroAddress &&
+      String(_ManagerLegacy_) !== C.zeroAddress
+    ) {
+      if (String(_ManagerLegacy_) === C.ensContracts[chain === "1" ? 7 : 3]) {
+        if (_OwnerWrapped_ && String(_OwnerWrapped_) !== C.zeroAddress) {
+          return String(_OwnerWrapped_);
+        }
+      } else {
+        return String(_OwnerLegacy_);
+      }
+      return C.zeroAddress;
+    } else {
+      if (_OwnerLegacy_ && String(_OwnerLegacy_) !== C.zeroAddress) {
+        return String(_OwnerLegacy_);
+      } else {
+        if (_ManagerLegacy_ && String(_ManagerLegacy_) !== C.zeroAddress) {
+          return String(_ManagerLegacy_);
+        } else {
+          return C.zeroAddress;
+        }
+      }
     }
   }
   // Whether connector is authorised to write
@@ -436,12 +470,10 @@ export default function Profile() {
     if (query && query !== null && typeof query === "string") {
       setENS(query);
       let __namehash = ethers.namehash(query);
+      setNamehashLegacy(__namehash);
       let __token = BigInt(__namehash);
       setTokenIDWrapper(String(__token));
-      let __labelhash = ethers.keccak256(
-        ethers.toUtf8Bytes(query.split(".eth")[0])
-      );
-      setNamehashLegacy(__namehash);
+      let __labelhash = C.calculateLabelhash(query);
       setTokenIDLegacy(String(BigInt(__labelhash)));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -938,7 +970,7 @@ export default function Profile() {
     address: `0x${ccip2Config.addressOrName.slice(2)}`,
     abi: ccip2Config.contractInterface,
     functionName: "getRecordhash",
-    args: [ethers.zeroPadValue(getManager(), 32)],
+    args: [ethers.zeroPadValue(getRecordEditor(), 32)],
   });
   // Read Recordhash from CCIP2 Resolver
   const { data: _Recordhash_ } = useContractRead({
@@ -950,17 +982,12 @@ export default function Profile() {
 
   // Sets Metadata
   React.useEffect(() => {
-    if (_OwnerLegacy_ && _OwnerLegacy_ !== C.zeroAddress) {
+    if (_OwnerLegacy_ && String(_OwnerLegacy_) !== C.zeroAddress) {
       let _meta = { ...meta };
       _meta.owner = String(_OwnerLegacy_);
-      if (String(_OwnerLegacy_) !== C.ensContracts[7]) {
-        if (_ManagerLegacy_ && _ManagerLegacy_ !== C.zeroAddress) {
-          _meta.manager = String(_ManagerLegacy_);
-        }
-      } else {
-        _meta.manager = String(_OwnerWrapped_);
-        _meta.wrapped = true;
-      }
+      _meta.manager = getManager();
+      _meta.wrapped =
+        C.ensContracts[chain === "1" ? 7 : 3] === String(_OwnerLegacy_);
       let _resolver: string;
       const loadResolver = async () => {
         _resolver = await getResolver(ENS);
@@ -1230,9 +1257,6 @@ export default function Profile() {
               if (data.response) {
                 // Get gas consumption estimate
                 let gas: any = {};
-                newKeys.forEach((key: string) => {
-                  gas[key] = "";
-                });
                 newKeys.map(async (item: string) => {
                   if (data.response.meta[item]) {
                     // Get gas for each record separately
@@ -1445,11 +1469,17 @@ export default function Profile() {
                         lineHeight: "23.5px",
                       }}
                     >
+                      {/* Migated Flag */}
                       <div
                         className="flex-column"
                         style={{
                           alignItems: "flex-start",
-                          marginTop: "1px",
+                          margin:
+                            meta.resolver === ccip2Contract
+                              ? canUse
+                                ? "1px 0 0 0"
+                                : "1px 0 0 0"
+                              : "2px 0 -4px 0",
                         }}
                       >
                         <button
@@ -1481,7 +1511,14 @@ export default function Profile() {
                           </div>
                         </button>
                       </div>
-                      <div style={{ margin: "0 0 2px 0" }}>
+                      {/* Resolver Bar*/}
+                      <div
+                        style={{
+                          margin: meta.wrapped
+                            ? "-3px 0 2px 0"
+                            : "-3px 0 3px 0",
+                        }}
+                      >
                         <span
                           className="mono"
                           id="metaResolver"
@@ -1497,20 +1534,61 @@ export default function Profile() {
                             ? C.truncateHexString(meta.resolver)
                             : meta.resolver}
                         </span>
-                        <img
-                          alt="logo-2"
-                          src={
+                        <button
+                          className="button-empty"
+                          style={{
+                            margin: `-6px 0 -5px 7px`,
+                          }}
+                          data-tooltip={
                             C.ensContracts.includes(resolver)
-                              ? "ens.png"
+                              ? "Using ENS Official Resolver"
                               : resolver === ccip2Contract
-                              ? "logo.png"
-                              : "ens.png"
+                              ? !canUse
+                                ? "Using NameSys Resolver with IPFS"
+                                : "Using NameSys Resolver"
+                              : "Using Custom Resolver"
                           }
-                          width={"15px"}
-                          style={{ margin: `0 15px -3px 7.5px` }}
-                        />
+                        >
+                          <img
+                            alt="logo-2"
+                            src={
+                              C.ensContracts.includes(resolver)
+                                ? "ens.png"
+                                : resolver === ccip2Contract
+                                ? !canUse
+                                  ? "shadow.png"
+                                  : "logo.png"
+                                : ""
+                            }
+                            width={
+                              C.ensContracts.includes(resolver)
+                                ? "15.5px"
+                                : resolver === ccip2Contract
+                                ? !canUse
+                                  ? "15px"
+                                  : "17px"
+                                : "17px"
+                            }
+                            style={{
+                              margin: C.ensContracts.includes(resolver)
+                                ? `0 0 -2px 0`
+                                : resolver === ccip2Contract
+                                ? !canUse
+                                  ? `0 0 0 0`
+                                  : `0 0 -2px 0`
+                                : `0 0 -2px 0`,
+                            }}
+                          />
+                        </button>
                       </div>
-                      <div style={{ margin: "-5px 0 1px 0" }}>
+                      {/* Owner Bar*/}
+                      <div
+                        style={{
+                          margin: meta.wrapped
+                            ? "-14px 0 6px 0"
+                            : "-15px 0 4px 0",
+                        }}
+                      >
                         <span
                           className="mono"
                           id="metaOwner"
@@ -1523,8 +1601,41 @@ export default function Profile() {
                             ? C.truncateHexString(meta.owner)
                             : meta.owner}
                         </span>
+                        {(meta.wrapped && (
+                          <button
+                            className="button-empty"
+                            data-tooltip="This Name is Wrapped"
+                          >
+                            <img
+                              alt="logo-3"
+                              src="ens-red.png"
+                              width={"15.5px"}
+                              style={{ margin: `0 0 -2px 7px` }}
+                            />
+                          </button>
+                        )) || (
+                          <button
+                            className="button-empty"
+                            data-tooltip="This Address Can Edit Records"
+                            style={{ margin: `0 0 0 5px` }}
+                          >
+                            <img
+                              alt="logo-3"
+                              src="logo.png"
+                              width={"17px"}
+                              style={{ margin: `0 0 -2px 1px` }}
+                            />
+                          </button>
+                        )}
                       </div>
-                      <div style={{ margin: "-3px 0 1px 0" }}>
+                      {/* Manager Bar*/}
+                      <div
+                        style={{
+                          margin: meta.wrapped
+                            ? "-23px 0 -6px 0"
+                            : "-13px 0 -2px 0",
+                        }}
+                      >
                         <span
                           className="mono"
                           id="metaManager"
@@ -1540,8 +1651,28 @@ export default function Profile() {
                             ? C.truncateHexString(meta.manager)
                             : meta.manager}
                         </span>
+                        {meta.wrapped && (
+                          <button
+                            className="button-empty"
+                            data-tooltip="This Address Can Edit Records"
+                          >
+                            <img
+                              alt="logo-3"
+                              src="logo.png"
+                              width={"17px"}
+                              style={{ margin: `0 0 -2px 7px` }}
+                            />
+                          </button>
+                        )}
                       </div>
-                      <div style={{ margin: "0px 0 2px 0" }}>
+                      {/* Wrapped Bar*/}
+                      <div
+                        style={{
+                          margin: meta.wrapped
+                            ? "0px 0 -1px 0"
+                            : "2px 0 -1px 0",
+                        }}
+                      >
                         <span
                           className="material-icons"
                           style={{
@@ -1595,7 +1726,9 @@ export default function Profile() {
                     className="button-tiny"
                     data-tooltip={
                       meta.resolver === ccip2Contract
-                        ? `Resolver is migrated`
+                        ? !canUse
+                          ? `Please use pro client`
+                          : `Resolver is migrated`
                         : `Resolver is not migrated`
                     }
                     style={{
@@ -1606,7 +1739,7 @@ export default function Profile() {
                       className="material-icons-round smoller"
                       style={{
                         color:
-                          meta.resolver === ccip2Contract
+                          meta.resolver === ccip2Contract && canUse
                             ? "lightgreen"
                             : "orange",
                         fontSize: "22px",
@@ -1711,6 +1844,7 @@ export default function Profile() {
                     handleModalData={handleRecordsData}
                     handleTrigger={handleRecordsTrigger}
                     records={Object.values(records)}
+                    canUse={canUse}
                     hue={
                       !_Wallet_ ||
                       (!meta.wrapped &&

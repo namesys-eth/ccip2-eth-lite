@@ -13,6 +13,7 @@ interface RecordsContainerProps {
   meta: any;
   records: Record[];
   hue: string;
+  canUse: boolean;
   handleModalData: (data: string) => void;
   handleTrigger: (data: boolean) => void;
 }
@@ -21,6 +22,7 @@ const Records: React.FC<RecordsContainerProps> = ({
   meta,
   records,
   hue,
+  canUse,
   handleModalData,
   handleTrigger,
 }) => {
@@ -333,7 +335,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                   onChange={(e) => {
                     update(record.id, e.target.value);
                   }}
-                  disabled={unauthorised()}
+                  disabled={unauthorised() || !canUse}
                   style={{
                     background:
                       meta.resolver === C.ccip2[meta.chainId === 5 ? 0 : 1]
