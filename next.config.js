@@ -1,11 +1,12 @@
 /** @type {import('next').NextConfig} */
 const env = process.env.NODE_ENV;
+const ghp = process.env.NEXT_PUBLIC_GITHUB_PAGES;
 const nextConfig = {
   distDir: "out",
   output: env === "production" ? "export" : "standalone",
   reactStrictMode: true,
-  basePath: env !== "production" ? "" : "",
-  assetPrefix: env !== "production" ? "" : "",
+  basePath: env !== "production" ? "" : ghp ? "/ccip2-eth-lite" : "",
+  assetPrefix: env !== "production" ? "" : ghp ? "/ccip2-eth-lite/" : "",
   ...(env === "production" && {
     images: {
       loader: "akamai",
