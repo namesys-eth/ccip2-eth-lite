@@ -186,13 +186,23 @@ export default function Profile() {
       }
     }
   }
-  // Whether connector is authorised to write
-  function unauthorised() {
+
+  // Whether connector is ready to write
+  function canEdit() {
     return (
       !_Wallet_ ||
       (!meta.wrapped && _Wallet_ !== meta.owner) ||
       (meta.wrapped && _Wallet_ !== meta.manager) ||
       meta.resolver !== C.ccip2[meta.chainId === 5 ? 0 : 1]
+    );
+  }
+
+  // Whether connector is (un)authorised to write
+  function unauthorised() {
+    return (
+      !_Wallet_ ||
+      (!meta.wrapped && _Wallet_ !== meta.owner) ||
+      (meta.wrapped && _Wallet_ !== meta.manager)
     );
   }
 
@@ -1787,9 +1797,9 @@ export default function Profile() {
                     className="button-tiny"
                     data-tooltip={
                       meta.resolver === ccip2Contract
-                        ? canUse && !unauthorised()
+                        ? canUse && !canEdit()
                           ? `Import ENS records`
-                          : unauthorised()
+                          : canEdit()
                           ? `Not Authorised`
                           : `Please use pro client`
                         : `Resolver is not migrated`
@@ -1804,7 +1814,7 @@ export default function Profile() {
                       style={{
                         color:
                           meta.resolver === ccip2Contract
-                            ? !canUse || unauthorised()
+                            ? !canUse || canEdit()
                               ? "orange"
                               : "lightgreen"
                             : "orange",
@@ -1831,7 +1841,7 @@ export default function Profile() {
                         : setResolverModal(true)
                     }
                     data-tooltip={"Import ENS Records"}
-                    disabled={!canUse || unauthorised()}
+                    disabled={!canUse || canEdit()}
                   >
                     <span className="material-icons-round micon bright">
                       download
