@@ -1,6 +1,6 @@
 {
   "name": "ccip2-eth-lite",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "homepage": "https://lite.namesys.xyz",
   "description": "NameSys/CCIP2 Lite Client",
   "private": true,
