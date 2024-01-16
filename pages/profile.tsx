@@ -550,52 +550,70 @@ export default function Profile() {
                                         .call()
                                         .then(async (value: string) => {
                                           _ensRecords.github = value;
+                                          // Set all values
                                           let _records = { ...records };
-                                          _records.addr.ens = _ensRecords.addr;
-                                          _records.avatar.ens =
-                                            _ensRecords.avatar;
-                                          _records.contenthash.ens =
-                                            _ensRecords.contenthash;
-                                          _records.url.ens = _ensRecords.url;
-                                          _records.description.ens =
-                                            _ensRecords.description;
-                                          _records["com.github"].ens =
-                                            _ensRecords.github;
-                                          _records["com.twitter"].ens =
-                                            _ensRecords.twitter;
-                                          _records["com.discord"].ens =
-                                            _ensRecords.discord;
-
-                                          _records.addr.new = _ensRecords.addr;
-                                          _records.avatar.new =
-                                            _ensRecords.avatar;
-                                          _records.contenthash.new =
-                                            _ensRecords.contenthash;
-                                          _records.url.new = _ensRecords.url;
-                                          _records.description.new =
-                                            _ensRecords.description;
-                                          _records["com.github"].new =
-                                            _ensRecords.github;
-                                          _records["com.twitter"].new =
-                                            _ensRecords.twitter;
-                                          _records["com.discord"].new =
-                                            _ensRecords.discord;
-
-                                          _records.addr.value =
-                                            _ensRecords.addr;
-                                          _records.avatar.value =
-                                            _ensRecords.avatar;
-                                          _records.contenthash.value =
-                                            _ensRecords.contenthash;
-                                          _records.url.value = _ensRecords.url;
-                                          _records.description.value =
-                                            _ensRecords.description;
-                                          _records["com.github"].value =
-                                            _ensRecords.github;
-                                          _records["com.twitter"].value =
-                                            _ensRecords.twitter;
-                                          _records["com.discord"].value =
-                                            _ensRecords.discord;
+                                          if (_ensRecords.addr) {
+                                            _records.addr.ens =
+                                              _ensRecords.addr;
+                                            _records.addr.new =
+                                              _ensRecords.addr;
+                                            _records.addr.value =
+                                              _ensRecords.addr;
+                                          }
+                                          if (_ensRecords.avatar) {
+                                            _records.avatar.ens =
+                                              _ensRecords.avatar;
+                                            _records.avatar.new =
+                                              _ensRecords.avatar;
+                                            _records.avatar.value =
+                                              _ensRecords.avatar;
+                                          }
+                                          if (_ensRecords.contenthash) {
+                                            _records.contenthash.ens =
+                                              _ensRecords.contenthash;
+                                            _records.contenthash.new =
+                                              _ensRecords.contenthash;
+                                            _records.contenthash.value =
+                                              _ensRecords.contenthash;
+                                          }
+                                          if (_ensRecords.url) {
+                                            _records.url.ens = _ensRecords.url;
+                                            _records.url.new = _ensRecords.url;
+                                            _records.url.value =
+                                              _ensRecords.url;
+                                          }
+                                          if (_ensRecords.description) {
+                                            _records.description.ens =
+                                              _ensRecords.description;
+                                            _records.description.new =
+                                              _ensRecords.description;
+                                            _records.description.value =
+                                              _ensRecords.description;
+                                          }
+                                          if (_ensRecords.github) {
+                                            _records["com.github"].ens =
+                                              _ensRecords.github;
+                                            _records["com.github"].new =
+                                              _ensRecords.github;
+                                            _records["com.github"].value =
+                                              _ensRecords.github;
+                                          }
+                                          if (_ensRecords.twitter) {
+                                            _records["com.twitter"].ens =
+                                              _ensRecords.twitter;
+                                            _records["com.twitter"].new =
+                                              _ensRecords.twitter;
+                                            _records["com.twitter"].value =
+                                              _ensRecords.twitter;
+                                          }
+                                          if (_ensRecords.discord) {
+                                            _records["com.discord"].ens =
+                                              _ensRecords.discord;
+                                            _records["com.discord"].new =
+                                              _ensRecords.discord;
+                                            _records["com.discord"].value =
+                                              _ensRecords.discord;
+                                          }
                                           setRecords(_records);
                                           setLoading(false);
                                         });
