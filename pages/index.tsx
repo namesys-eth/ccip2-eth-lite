@@ -14,7 +14,11 @@ export default function Home() {
   // Triggers search of ENS domain
   const handleNameSearch = (query: string) => {
     setLoading(true);
-    router.push(`/profile${process.env.NODE_ENV === 'production' ? '.html' : ''}?query=${query}`);
+    router.push(
+      `/profile${
+        process.env.NODE_ENV === "production" ? ".html" : ""
+      }?query=${query}`
+    );
   };
 
   // INIT
@@ -69,7 +73,7 @@ export default function Home() {
             <SearchBox onSearch={handleNameSearch} />
           </div>
         )}
-        {loading && <Loading height={50} width={50} />}
+        {loading && <Loading height={40} width={40} />}
         <div className={styles.grid} style={{ marginTop: "50px" }}>
           <a
             href="https://app.namesys.xyz"

@@ -357,7 +357,7 @@ const Records: React.FC<RecordsContainerProps> = ({
                       C.isGoodValue(record.id, getVal(record.id))
                         ? "lime"
                         : hue,
-                    cursor: "copy",
+                    cursor: "text",
                   }}
                 />
                 <div

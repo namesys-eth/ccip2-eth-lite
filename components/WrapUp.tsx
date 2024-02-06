@@ -63,7 +63,7 @@ const GasSavings: React.FC<GasSavings> = ({
                 color: color,
               }}
             >
-              {"wind_power"}
+              {icon}
             </span>
           </StyledModalTitle>
         )}
@@ -78,7 +78,7 @@ const GasSavings: React.FC<GasSavings> = ({
               style={{
                 fontSize: "24px",
                 marginTop: "10px",
-                color: "lime",
+                color: color,
                 fontWeight: "700",
               }}
             >
@@ -115,7 +115,7 @@ const GasSavings: React.FC<GasSavings> = ({
                 fontFamily: "SF Mono",
                 fontSize: "24px",
                 fontWeight: "600",
-                color: "lime",
+                color: color,
               }}
             >
               {sumValues(children).toPrecision(3)}

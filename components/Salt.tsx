@@ -163,7 +163,7 @@ const Salt: React.FC<ModalProps> = ({
                     : children && children.length > 0
                     ? "cyan"
                     : "rgb(255, 255, 255, 0.6)",
-                  cursor: "copy",
+                  cursor: "text",
                   marginBottom: "10px",
                 }}
               />
@@ -222,7 +222,7 @@ const Salt: React.FC<ModalProps> = ({
                   wordWrap: "break-word",
                   textAlign: "left",
                   color: password ? "white" : "rgb(255, 255, 255, 0.6)",
-                  cursor: "copy",
+                  cursor: "text",
                 }}
               />
               <button

@@ -131,7 +131,7 @@ const ResolverModal: React.FC<ModalProps> = ({
               color: C.isAddr(inputValue)
                 ? "lightgreen"
                 : "rgb(255, 255, 255, 1)",
-              cursor: "copy",
+              cursor: "text",
             }}
           />
           <button
@@ -217,7 +217,6 @@ const StyledModalTitle = styled.div`
   flex-direction: column;
   font-weight: 700;
   margin-bottom: 15px;
-  color: white;
   padding-left: 20px;
   padding-right: 20px;
   color: cyan;

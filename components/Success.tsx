@@ -121,7 +121,7 @@ const StyledModalBody = styled.div`
   justify-content: center;
   height: auto;
   overflow-y: auto;
-  color: white;
+  color: lime;
   font-size: 18px;
   font-weight: 700;
   line-height: 22px;
@@ -129,7 +129,7 @@ const StyledModalBody = styled.div`
 `;
 
 const StyledModalTitle = styled.div`
-  margin-top: -15px;
+  margin-top: 0;
   font-size: 20px;
   display: flex;
   justify-content: center;

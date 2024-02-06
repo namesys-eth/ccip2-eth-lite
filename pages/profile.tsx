@@ -54,6 +54,7 @@ export default function Profile() {
   const [resolverModal, setResolverModal] = React.useState(false); // Resolver modal
   const [records, setRecords] = React.useState<C.RecordsType>(C.records); // Set records
   const [meta, setMeta] = React.useState(C.meta); // Set ENS metadata
+  const [recordEditor, setRecordEditor] = React.useState(C.zeroAddress); // Sets in-app record editor
   const [tokenIDLegacy, setTokenIDLegacy] = React.useState(""); // Set Token ID of unwrapped/legacy name
   const [namehashLegacy, setNamehashLegacy] = React.useState(""); // Legacy Namehash of ENS Domain
   const [tokenIDWrapper, setTokenIDWrapper] = React.useState(""); // Set Token ID of wrapped name
@@ -448,12 +449,8 @@ export default function Profile() {
         body: JSON.stringify(request),
       })
         .then((response) => response.json())
-        .then((data) => {
-          if (data.status) {
-            return data.status === "true";
-          } else {
-            return false;
-          }
+        .then(async (data) => {
+          return data.response.status;
         });
     } catch (error) {
       console.error("ERROR:", "Failed to write Revision to CCIP2 backend");
@@ -475,7 +472,7 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height]);
 
-  // Sets ENS domain
+  // Triggers upon query load and attempts to get token and name data
   React.useEffect(() => {
     if (query && query !== null && typeof query === "string") {
       setENS(query);
@@ -488,6 +485,25 @@ export default function Profile() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
+
+// Triggers reading ownership and controller details for a name after getting token and name data
+React.useEffect(() => {
+  if (namehashLegacy && tokenIDLegacy && tokenIDWrapper && ENS) {
+    readRecordhash();
+    readLegacyOwner();
+    readLegacyManager();
+    readWrapperManager();
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [namehashLegacy, tokenIDLegacy, tokenIDWrapper, ENS]);
+
+  // Enables querying Ownerhash
+  React.useEffect(() => {
+    if (recordEditor && recordEditor !== C.zeroAddress) {
+      readOwnerhash();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordEditor]);
 
   // Gets past ENS records upon request
   React.useEffect(() => {
@@ -963,6 +979,7 @@ export default function Profile() {
   // Read Legacy ENS Registry for ENS domain Owner
   const {
     data: _OwnerLegacy_,
+    refetch: readLegacyOwner,
     isLoading: legacyOwnerLoading,
     isError: legacyOwnerError,
   } = useContractRead({
@@ -974,6 +991,7 @@ export default function Profile() {
   // Read Legacy ENS Registry for ENS domain Manager
   const {
     data: _ManagerLegacy_,
+    refetch: readLegacyManager,
     isLoading: legacyManagerLoading,
     isError: legacyManagerError,
   } = useContractRead({
@@ -985,6 +1003,7 @@ export default function Profile() {
   // Read ownership of a domain from ENS Wrapper
   const {
     data: _OwnerWrapped_,
+    refetch: readWrapperManager,
     isLoading: wrapperOwnerLoading,
     isError: wrapperOwnerError,
   } = useContractRead({
@@ -994,14 +1013,14 @@ export default function Profile() {
     args: [tokenIDWrapper],
   });
   // Read Ownerhash from CCIP2 Resolver
-  const { data: _Ownerhash_ } = useContractRead({
+  const { data: _Ownerhash_, refetch: readOwnerhash } = useContractRead({
     address: `0x${ccip2Config.addressOrName.slice(2)}`,
     abi: ccip2Config.contractInterface,
     functionName: "getRecordhash",
     args: [ethers.zeroPadValue(getRecordEditor(), 32)],
   });
   // Read Recordhash from CCIP2 Resolver
-  const { data: _Recordhash_ } = useContractRead({
+  const { data: _Recordhash_, refetch: readRecordhash } = useContractRead({
     address: `0x${ccip2Config.addressOrName.slice(2)}`,
     abi: ccip2Config.contractInterface,
     functionName: "getRecordhash",
@@ -1025,6 +1044,7 @@ export default function Profile() {
       };
       loadResolver();
     }
+    setRecordEditor(getRecordEditor());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_OwnerLegacy_, _ManagerLegacy_, _OwnerWrapped_]);
 
@@ -1376,7 +1396,7 @@ export default function Profile() {
         {loading && (
           <>
             <div style={{ marginTop: mobile ? "300px" : "350px" }}>
-              <Loading height={50} width={50} />
+              <Loading height={40} width={40} />
             </div>
             <div
               style={{
@@ -1895,7 +1915,7 @@ export default function Profile() {
                   </Salt>
                   <GasSavings
                     color={"lime"}
-                    icon={"free_breakfast"}
+                    icon={"wind_power"}
                     onClose={() => {
                       setGasModal(false);
                       setLoading(true);
