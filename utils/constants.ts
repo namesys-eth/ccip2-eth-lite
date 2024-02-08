@@ -77,41 +77,6 @@ export function randomString(length: number) {
   return result;
 }
 
-export type DynamicRosterItem = {
-  index: number;
-  tick: number;
-  time: string;
-  value: string;
-};
-
-// Dynamic Avatar schedule
-export const dynamicRoster = [
-  {
-    index: 0,
-    tick: 0,
-    time: "",
-    value: "",
-  },
-  {
-    index: 1,
-    tick: 0,
-    time: "",
-    value: "",
-  },
-  {
-    index: 2,
-    tick: 0,
-    time: "",
-    value: "",
-  },
-  {
-    index: 3,
-    tick: 0,
-    time: "",
-    value: "",
-  },
-];
-
 // ENS Records
 export const ensRecords = {
   contenthash: "",
@@ -137,6 +102,7 @@ export const meta = {
   signature: "",
 };
 
+export const coolingPeriod = 60; // 60 minutes
 let network = process.env.NEXT_PUBLIC_NETWORK;
 export const w3timestamp = 1699534314;
 export const alchemyConfig = {
@@ -250,6 +216,51 @@ export type recordType = {
   ens: string;
   signature: string;
 };
+
+export type DynamicRosterItem = {
+  index: number;
+  tick: number;
+  time: string;
+  value: string;
+  newVal: string;
+  signature: string;
+};
+
+// Dynamic Avatar schedule
+export const dynamicRoster = [
+  {
+    index: 0,
+    tick: 0,
+    time: "",
+    value: "",
+    newVal: "",
+    signature: "",
+  },
+  {
+    index: 1,
+    tick: 0,
+    time: "",
+    value: "",
+    newVal: "",
+    signature: "",
+  },
+  {
+    index: 2,
+    tick: 0,
+    time: "",
+    value: "",
+    newVal: "",
+    signature: "",
+  },
+  {
+    index: 3,
+    tick: 0,
+    time: "",
+    value: "",
+    newVal: "",
+    signature: "",
+  },
+];
 
 // ENS Domain's Records
 export const records = {

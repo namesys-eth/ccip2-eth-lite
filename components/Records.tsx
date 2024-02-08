@@ -30,9 +30,7 @@ const Records: React.FC<RecordsContainerProps> = ({
   const [helpModal, setHelpModal] = React.useState(false);
   const [help, setHelp] = React.useState("");
   const [inputValue, setInputValue] = React.useState(records);
-  const [roster, setRoster] = React.useState(
-    C.dynamicRoster.map((item) => ({ ...item }))
-  );
+  const [roster, setRoster] = React.useState(C.dynamicRoster);
   const [mobile, setMobile] = React.useState(false); // Set mobile or dekstop environment
   const { width, height } = useWindowDimensions(); // Get window dimensions
   const [avatarModalState, setAvatarModalState] =
@@ -90,14 +88,20 @@ const Records: React.FC<RecordsContainerProps> = ({
   React.useEffect(() => {
     if (avatarModalState.trigger) {
       setRoster(JSON.parse(avatarModalState.modalData));
+      setAvatarModal(false);
+      handleModalData(
+        JSON.stringify(inputValue) + "<>" + avatarModalState.modalData
+      );
+      handleTrigger(true);
     } else {
-      setRoster(C.dynamicRoster.map((item) => ({ ...item })));
+      setRoster(C.dynamicRoster);
+      setAvatarModal(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatarModalState]);
 
   const handleSubmit = (e: { preventDefault: () => void }) => {
-    handleModalData(JSON.stringify(inputValue));
+    handleModalData(JSON.stringify(inputValue) + "<>");
     handleTrigger(true);
     e.preventDefault();
   };
@@ -270,8 +274,8 @@ const Records: React.FC<RecordsContainerProps> = ({
                     </div>
                   </button>
                   {record.id === "avatar" &&
-                    !unauthorised() &&
-                    process.env.NODE_ENV === "development" && (
+                    (process.env.NODE_ENV === "development" ||
+                      process.env.NEXT_PUBLIC_GITHUB_PAGES) && (
                       <button
                         className="button-dynamic emphasis-smol"
                         onClick={() => {

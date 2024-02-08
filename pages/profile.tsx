@@ -53,6 +53,9 @@ export default function Profile() {
   const [canUse, setCanUse] = React.useState(false); // Set import flag
   const [resolverModal, setResolverModal] = React.useState(false); // Resolver modal
   const [records, setRecords] = React.useState<C.RecordsType>(C.records); // Set records
+  const [dynamicAvatar, setDynamicAvatar] = React.useState<
+    C.DynamicRosterItem[]
+  >(C.dynamicRoster); // Set records
   const [meta, setMeta] = React.useState(C.meta); // Set ENS metadata
   const [recordEditor, setRecordEditor] = React.useState(C.zeroAddress); // Sets in-app record editor
   const [tokenIDLegacy, setTokenIDLegacy] = React.useState(""); // Set Token ID of unwrapped/legacy name
@@ -218,6 +221,20 @@ export default function Profile() {
     return nonEmptyNewCount;
   }
 
+  // Counts phases in dynamic avatars
+  function countPhases(dynamicRecord: typeof C.dynamicRoster) {
+    let nonEmptyNewCount = 0;
+    for (const key in dynamicRecord) {
+      if (
+        dynamicRecord.hasOwnProperty(key) &&
+        dynamicRecord[key].newVal !== ""
+      ) {
+        nonEmptyNewCount++;
+      }
+    }
+    return nonEmptyNewCount;
+  }
+
   // Sign a record
   async function signRecord(
     records: C.RecordsType,
@@ -235,6 +252,30 @@ export default function Profile() {
     } else {
       return "";
     }
+  }
+
+  // Sign a dynamic record
+  async function signDynamicRecord(
+    _dynamicRecord: typeof C.dynamicRoster,
+    _signer: ethers.Wallet,
+    _type: string
+  ) {
+    let _signatures = [];
+    for (var i = 0; i < _dynamicRecord.length; i++) {
+      if (_dynamicRecord[i].newVal) {
+        let _sig = await _signer.signMessage(
+          statementRecords(
+            _type === "avatar" ? "text/avatar" : "0x0",
+            genExtradata(_type, _dynamicRecord[i].newVal),
+            meta.signer
+          )
+        );
+        _signatures.push(_sig);
+      } else {
+        _signatures.push("");
+      }
+    }
+    return _signatures;
   }
 
   /// Encode string values of records
@@ -412,7 +453,9 @@ export default function Profile() {
     revision: undefined,
     gas: {},
     timestamp: string,
-    _ipfs: string
+    _ipfs: string,
+    dynamic: boolean,
+    dynamicContent: typeof dynamicAvatar | undefined
   ) {
     let __revision: any = {};
     if (revision) {
@@ -431,14 +474,14 @@ export default function Profile() {
       controller: _Wallet_,
       manager: meta.signer || C.zeroAddress,
       managerSignature: meta.signature,
-      revision: {},
+      revision: dynamic && dynamicContent ? dynamicContent : {},
       chain: chain,
       ipns: "",
       ipfs: _ipfs,
       gas: JSON.stringify(gas),
       version: __revision,
       timestamp: timestamp,
-      hashType: "gateway",
+      hashType: dynamic ? "dynamic" : "gateway",
     };
     try {
       await fetch(`${SERVER}:${PORT}/revision`, {
@@ -486,16 +529,16 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-// Triggers reading ownership and controller details for a name after getting token and name data
-React.useEffect(() => {
-  if (namehashLegacy && tokenIDLegacy && tokenIDWrapper && ENS) {
-    readRecordhash();
-    readLegacyOwner();
-    readLegacyManager();
-    readWrapperManager();
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [namehashLegacy, tokenIDLegacy, tokenIDWrapper, ENS]);
+  // Triggers reading ownership and controller details for a name after getting token and name data
+  React.useEffect(() => {
+    if (namehashLegacy && tokenIDLegacy && tokenIDWrapper && ENS) {
+      readRecordhash();
+      readLegacyOwner();
+      readLegacyManager();
+      readWrapperManager();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [namehashLegacy, tokenIDLegacy, tokenIDWrapper, ENS]);
 
   // Enables querying Ownerhash
   React.useEffect(() => {
@@ -1013,14 +1056,24 @@ React.useEffect(() => {
     args: [tokenIDWrapper],
   });
   // Read Ownerhash from CCIP2 Resolver
-  const { data: _Ownerhash_, refetch: readOwnerhash } = useContractRead({
+  const {
+    data: _Ownerhash_,
+    isLoading: isRecordhashLoading,
+    isError: isRecordhashError,
+    refetch: readOwnerhash,
+  } = useContractRead({
     address: `0x${ccip2Config.addressOrName.slice(2)}`,
     abi: ccip2Config.contractInterface,
     functionName: "getRecordhash",
     args: [ethers.zeroPadValue(getRecordEditor(), 32)],
   });
   // Read Recordhash from CCIP2 Resolver
-  const { data: _Recordhash_, refetch: readRecordhash } = useContractRead({
+  const {
+    data: _Recordhash_,
+    isLoading: isOwnerhashLoading,
+    isError: isOwnerhashError,
+    refetch: readRecordhash,
+  } = useContractRead({
     address: `0x${ccip2Config.addressOrName.slice(2)}`,
     abi: ccip2Config.contractInterface,
     functionName: "getRecordhash",
@@ -1121,13 +1174,17 @@ React.useEffect(() => {
   // Set Records to write
   React.useEffect(() => {
     if (recordsState.trigger && recordsState.modalData) {
-      let _allRecords = JSON.parse(recordsState.modalData);
+      let _allRecords = JSON.parse(recordsState.modalData.split("<>")[0]);
       let _records: C.RecordsType = { ...records };
       for (var i = 0; i < _allRecords.length; i++) {
         _records[_allRecords[i].id] = _allRecords[i];
       }
       setRecords(_records);
       setSaltModal(true);
+      let _dynamicAvatar = recordsState.modalData.split("<>")[1];
+      if (_dynamicAvatar) {
+        setDynamicAvatar(JSON.parse(_dynamicAvatar));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recordsState]);
@@ -1161,6 +1218,7 @@ React.useEffect(() => {
         setMessage("Signing Records");
         const _signer = new ethers.Wallet("0x" + signer[0], provider);
         let _records = { ...records };
+        let _dynamicAvatar = [...dynamicAvatar];
         const _signRecords = async () => {
           await signRecord(_records, _signer, "addr").then(async (sig) => {
             _records.addr.signature = sig;
@@ -1194,6 +1252,23 @@ React.useEffect(() => {
                                   "com.github"
                                 ).then(async (sig) => {
                                   _records["com.github"].signature = sig;
+                                  let phases = countPhases(_dynamicAvatar);
+                                  if (phases > 0) {
+                                    await signDynamicRecord(
+                                      _dynamicAvatar,
+                                      _signer,
+                                      "avatar"
+                                    ).then(async (sig: string[]) => {
+                                      for (
+                                        var i = 0;
+                                        i < _dynamicAvatar.length;
+                                        i++
+                                      ) {
+                                        _dynamicAvatar[i].signature = sig[i];
+                                      }
+                                      setDynamicAvatar(_dynamicAvatar);
+                                    });
+                                  }
                                   setRecords(_records);
                                   setSigCount(0);
                                   setLoading(false);
@@ -1250,6 +1325,137 @@ React.useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signLoading, signError, sigCount]);
 
+  /* HANDLE WRITING DYNAMIC AVATARS */
+  // Handles writing dynamic avatars to the NameSys backend
+  React.useEffect(() => {
+    let _dynamicAvatar = [...dynamicAvatar];
+    let count = countPhases(_dynamicAvatar);
+    if (write && count > 0) {
+      setLoading(true);
+      let encodedValues: string[] = [];
+      let newValues: string[] = [];
+      let newKeys: string[] = [];
+      let signatures: string[] = [];
+      for (var i = 0; i < _dynamicAvatar.length; i++) {
+        if (_dynamicAvatar[i].newVal !== "") {
+          newValues.push(_dynamicAvatar[i].newVal);
+          encodedValues.push(
+            encodeValue(
+              "avatar",
+              _dynamicAvatar[i].newVal,
+              _dynamicAvatar[i].signature,
+              meta.signature,
+              meta.signer
+            ) +
+              "<>" +
+              String(_dynamicAvatar[i].tick)
+          );
+          signatures.push(_dynamicAvatar[i].signature);
+          newKeys.push("avatar");
+        }
+      }
+      // Generate POST request for writing dynamic records
+      const request = {
+        signatures: signatures,
+        manager: meta.signer || C.zeroAddress,
+        managerSignature: meta.signature,
+        ens: ENS,
+        controller: _Wallet_ || C.zeroAddress,
+        ipns: "",
+        recordsTypes: newKeys,
+        recordsValues: encodedValues,
+        recordsRaw: newValues,
+        revision: "",
+        chain: chain,
+        hashType: "dynamic",
+      };
+      const editRecord = async () => {
+        setMessage("Writing Dynamic Records");
+        try {
+          await fetch(`${SERVER}:${PORT}/write`, {
+            method: "post",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+          })
+            .then((response) => response.json())
+            .then(async (data: any) => {
+              if (data.response) {
+                // Get gas consumption estimate
+                let gas: any = {};
+                for (var index = 0; index < newValues.length; index++) {
+                  // Get gas for each avatar separately
+                  let _gas = getGas(
+                    "avatar",
+                    data.response.phases[index].split("<>")[1]
+                  );
+                  const _promise = async () => {
+                    await Promise.all([_gas]);
+                  };
+                  await _promise();
+                  _gas.then((value: number) => {
+                    let _gasData =
+                      gasData && gasData.formatted && gasData.formatted.gasPrice
+                        ? Number(gasData.formatted.gasPrice)
+                        : 0;
+                    gas[String(index)] = value * _gasData * 0.000000001;
+                  });
+                  _dynamicAvatar[index].value = newValues[index];
+                  _dynamicAvatar[index].newVal = "";
+                  _dynamicAvatar[index].signature = "";
+                }
+                // Wait for gas to be estimated
+                await new Promise<void>((resolve) => {
+                  const checkGas = () => {
+                    if (Object.keys(gas).length > 0) {
+                      resolve();
+                    } else {
+                      setTimeout(checkGas, 100);
+                    }
+                  };
+                  checkGas();
+                });
+                const gateway = async () => {
+                  if (gas) {
+                    // Write revision to database
+                    await writeRevision(
+                      undefined,
+                      gas,
+                      data.response.timestamp,
+                      "",
+                      true,
+                      _dynamicAvatar
+                    );
+                    setGas(gas);
+                    setGasModal(true);
+                    setLoading(false);
+                    setSigCount(0);
+                    setSaltModalState({
+                      modalData: undefined,
+                      trigger: false,
+                    });
+                    setSuccess(
+                      '<div style="font-weight: 800"><span style="color: lime; font-size: 22px">Dynamic Avatar Set!</span></div>'
+                    );
+                  }
+                };
+                gateway();
+              }
+            });
+        } catch (error) {
+          console.error("ERROR:", "Failed dynamic write to CCIP2 backend");
+          setMessage("Dynamic Update Failed");
+          setCrash(true);
+          setLoading(false);
+          setColor("orangered");
+        }
+      };
+      editRecord();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [write, meta]);
+
   /* HANDLE WRITING RECORDS */
   // Handles writing records to the NameSys backend
   React.useEffect(() => {
@@ -1301,7 +1507,7 @@ React.useEffect(() => {
             body: JSON.stringify(request),
           })
             .then((response) => response.json())
-            .then(async (data) => {
+            .then(async (data: any) => {
               if (data.response) {
                 // Get gas consumption estimate
                 let gas: any = {};
@@ -1352,7 +1558,9 @@ React.useEffect(() => {
                       undefined,
                       gas,
                       data.response.timestamp,
-                      ""
+                      "",
+                      false,
+                      undefined
                     );
                     setGas(gas);
                     setGasModal(true);
@@ -1395,7 +1603,7 @@ React.useEffect(() => {
         <div style={{ fontFamily: "Spotnik" }}></div>
         {loading && (
           <>
-            <div style={{ marginTop: mobile ? "300px" : "350px" }}>
+            <div style={{ marginTop: mobile ? "300px" : "300px" }}>
               <Loading height={40} width={40} />
             </div>
             <div

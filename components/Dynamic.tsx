@@ -32,11 +32,15 @@ const DynamicAvatar: React.FC<ModalProps> = ({
     setBrowser(true);
   }, []);
 
+  // Get the latest time in roster
+  const maxTick = roster.reduce((max, item) => {
+    return item.tick > max ? item.tick : max;
+  }, roster[0].tick);
+
   // isValids if roster is full
   const isValidValuesAndTicks = (): boolean => {
-    console.log(roster);
-    return [...roster].every(
-      (item) => C.isUrl(item.value) && item.tick > currentTime
+    return roster.every(
+      (item) => C.isUrl(item.newVal) && item.tick > maxTick + C.coolingPeriod
     );
   };
 
@@ -45,7 +49,9 @@ const DynamicAvatar: React.FC<ModalProps> = ({
     index: number,
     tick: number,
     time: string,
-    value: string
+    value: string,
+    newVal: string,
+    signature: string
   ): void => {
     setRoster((prevRoster) => {
       const newItem: C.DynamicRosterItem = {
@@ -53,6 +59,8 @@ const DynamicAvatar: React.FC<ModalProps> = ({
         tick,
         time,
         value,
+        newVal,
+        signature,
       };
       let newRoster = [...prevRoster];
       newRoster.push(newItem);
@@ -89,7 +97,7 @@ const DynamicAvatar: React.FC<ModalProps> = ({
     setRoster((prevRoster) => {
       let newRoster = [...prevRoster];
       newRoster[index].tick = index;
-      newRoster[index].value = "";
+      newRoster[index].newVal = "";
       newRoster[index].time = "";
       return newRoster;
     });
@@ -102,8 +110,10 @@ const DynamicAvatar: React.FC<ModalProps> = ({
       const _unix = new Date(value);
       if (_unix) {
         let _unixTime = Math.floor(_unix.getTime() / 1000);
-        if (_unixTime > currentTime) {
+        if (_unixTime > currentTime && _unixTime > maxTick + C.coolingPeriod) {
           newRoster[index].tick = _unixTime;
+        } else {
+          newRoster[index].tick = 0;
         }
       }
       newRoster[index].time = value;
@@ -115,7 +125,7 @@ const DynamicAvatar: React.FC<ModalProps> = ({
   function updateRosterValue(index: number, value: string) {
     setRoster((prevRoster) => {
       const newRoster = [...prevRoster];
-      newRoster[index].value = value;
+      newRoster[index].newVal = value;
       return newRoster;
     });
   }
@@ -176,7 +186,7 @@ const DynamicAvatar: React.FC<ModalProps> = ({
                 onClick={() => {
                   setHelpModal(true),
                     setHelp(
-                      '<span><span style="color: cyan">Dynamic</span> Avatars</span>'
+                      '<span><span style="color: cyan">Dynamic</span> avatars are capable of auto-updating according to a preset schedule</span>'
                     );
                 }}
                 data-tooltip={"Enlighten Me"}
@@ -203,14 +213,17 @@ const DynamicAvatar: React.FC<ModalProps> = ({
                 color: "cyan",
               }}
             >
-              <div className="flex-row" style={{ margin: "0 50px 0 -10px" }}>
+              <div
+                className="flex-row"
+                style={{ margin: mobile ? "0" : "0 50px 0 -10px" }}
+              >
                 <span style={{ fontSize: "16px" }}>Time</span>
                 <button
                   className="button-tiny"
                   onClick={() => {
                     setHelpModal(true),
                       setHelp(
-                        '<span><span style="color: cyan">Dynamic</span> Avatars</span>'
+                        '<span>Please enter <span style="color: cyan">times</span> when avatars should be updated. Please separate ticks by <span style="color: orangered">at least one hour</span>.</span>'
                       );
                   }}
                   data-tooltip={"Enlighten Me"}
@@ -234,7 +247,7 @@ const DynamicAvatar: React.FC<ModalProps> = ({
                   onClick={() => {
                     setHelpModal(true),
                       setHelp(
-                        '<span><span style="color: cyan">Dynamic</span> Avatars</span>'
+                        '<span>Please enter corresponding <span style="color: cyan">URLs</span> for new avatars</span>'
                       );
                   }}
                   data-tooltip={"Enlighten Me"}
@@ -281,11 +294,14 @@ const DynamicAvatar: React.FC<ModalProps> = ({
                         onClick={() => deleteItemFromRoster(instance.index)}
                         disabled={Object.values(roster).length < 2}
                         hidden={Object.values(roster).length < 2}
+                        style={{
+                          marginTop: mobile ? "-45px" : "0",
+                        }}
                       >
                         <div
                           className="material-icons-round"
                           style={{
-                            fontSize: "16px",
+                            fontSize: "20px",
                             fontWeight: "700",
                             color: "orangered",
                           }}
@@ -293,22 +309,74 @@ const DynamicAvatar: React.FC<ModalProps> = ({
                           {"delete_outline"}
                         </div>
                       </button>
-                      <div className="flex-row">
+                      <div className={mobile ? "flex-column" : "flex-row"}>
+                        <div className="flex-row">
+                          <input
+                            className="inputgeneric"
+                            id={`left-${instance.index}`}
+                            key={`left-${instance.index}`}
+                            name={`left-${instance.index}`}
+                            placeholder={instance.time}
+                            type="datetime-local"
+                            value={instance.time}
+                            onChange={(e) => {
+                              updateRosterTick(instance.index, e.target.value);
+                            }}
+                            style={{
+                              background: "black",
+                              outline: "none",
+                              height: "2.3rem",
+                              border: "none",
+                              padding: "5px",
+                              borderRadius: "3px",
+                              fontFamily: "SF Mono",
+                              letterSpacing: "-0.5px",
+                              fontWeight: "400",
+                              fontSize: "14px",
+                              width: "100%",
+                              wordWrap: "break-word",
+                              textAlign: "left",
+                              color:
+                                instance.tick > 0
+                                  ? "lime"
+                                  : "rgb(255, 255, 255, 1)",
+                              cursor: "copy",
+                              margin: mobile
+                                ? instance.time
+                                  ? "0 0 -7.5px 0"
+                                  : "0 0 -7.5px 16.5px"
+                                : "10px",
+                            }}
+                          />
+                          <span
+                            className="material-icons-round"
+                            style={{
+                              fontSize: "18px",
+                              fontWeight: "700",
+                              color: "#ffffff88",
+                              margin: mobile
+                                ? "0 33px -10px -33px"
+                                : "0 33px 0 -33px",
+                              pointerEvents: "none",
+                            }}
+                            hidden={mobile && instance.time !== ""}
+                          >
+                            {"calendar_month"}
+                          </span>
+                        </div>
                         <input
                           className="inputgeneric"
-                          id={`left-${instance.index}`}
-                          key={`left-${instance.index}`}
-                          name={`left-${instance.index}`}
-                          placeholder={instance.time}
-                          type="datetime-local"
-                          value={instance.time}
+                          id={`right-${instance.index}`}
+                          key={`right-${instance.index}`}
+                          placeholder={"image URL"}
+                          type="text"
+                          value={instance.newVal || instance.value}
                           onChange={(e) => {
-                            updateRosterTick(instance.index, e.target.value);
+                            updateRosterValue(instance.index, e.target.value);
                           }}
                           style={{
                             background: "black",
                             outline: "none",
-                            height: "2.3rem",
                             border: "none",
                             padding: "5px",
                             borderRadius: "3px",
@@ -319,66 +387,26 @@ const DynamicAvatar: React.FC<ModalProps> = ({
                             width: "100%",
                             wordWrap: "break-word",
                             textAlign: "left",
-                            color:
-                              instance.tick > 0
-                                ? "lime"
-                                : "rgb(255, 255, 255, 1)",
+                            color: C.isUrl(instance.newVal)
+                              ? "lime"
+                              : "rgb(255, 255, 255, 1)",
                             cursor: "copy",
                             margin: "10px",
                           }}
                         />
-                        <span
-                          className="material-icons-round"
-                          style={{
-                            fontSize: "18px",
-                            fontWeight: "700",
-                            color: "#ffffff88",
-                            margin: "0 33px 0 -33px",
-                            pointerEvents: "none",
-                          }}
-                        >
-                          {"calendar_month"}
-                        </span>
                       </div>
-                      <input
-                        className="inputgeneric"
-                        id={`right-${instance.index}`}
-                        key={`right-${instance.index}`}
-                        placeholder={"image URL"}
-                        type="text"
-                        value={instance.value}
-                        onChange={(e) => {
-                          updateRosterValue(instance.index, e.target.value);
-                        }}
-                        style={{
-                          background: "black",
-                          outline: "none",
-                          border: "none",
-                          padding: "5px",
-                          borderRadius: "3px",
-                          fontFamily: "SF Mono",
-                          letterSpacing: "-0.5px",
-                          fontWeight: "400",
-                          fontSize: "14px",
-                          width: "100%",
-                          wordWrap: "break-word",
-                          textAlign: "left",
-                          color: C.isUrl(instance.value)
-                            ? "lime"
-                            : "rgb(255, 255, 255, 1)",
-                          cursor: "copy",
-                          margin: "10px",
-                        }}
-                      />
                       <button
                         className="button-tiny shift-left"
                         data-tooltip={"reset"}
                         onClick={() => resetRow(instance.index)}
+                        style={{
+                          marginTop: mobile ? "-45px" : "0",
+                        }}
                       >
                         <div
                           className="material-icons-round"
                           style={{
-                            fontSize: "16px",
+                            fontSize: "20px",
                             fontWeight: "700",
                             color: "lightgreen",
                           }}
@@ -388,35 +416,50 @@ const DynamicAvatar: React.FC<ModalProps> = ({
                       </button>
                     </div>
                   </div>
+                  {mobile && <hr style={{ borderColor: "white" }} />}
                 </div>
               ))}
             </div>
             <button
               className="extra-button"
               style={{
-                margin: "30px 0 0 25%",
-                width: "50%",
+                margin: mobile ? "30px 0 0 40%" : "30px 0 0 32%",
+                width: mobile ? "20%" : "36%",
               }}
               data-tooltip={"add more"}
               onClick={() =>
-                addNewItemToRoster(Object.values(roster).length, 0, "", "")
+                addNewItemToRoster(
+                  Object.values(roster).length,
+                  0,
+                  "",
+                  "",
+                  "",
+                  ""
+                )
               }
               hidden={Object.values(roster).length > 100}
               disabled={Object.values(roster).length > 100}
             >
               <div className="flex-row">
-                <span style={{ fontSize: "16px" }}>Add More</span>&nbsp;
+                <span
+                  style={{
+                    fontSize: "16px",
+                    paddingRight: mobile ? "0" : "5px",
+                  }}
+                >
+                  {mobile ? "" : "Add More"}
+                </span>
                 <span className="material-icons-round">{"add"}</span>
               </div>
             </button>
             <button
               className="button"
               style={{
-                margin: "30px 0 0 35%",
-                width: "30%",
+                margin: mobile ? "30px 0 0 25%" : "30px 0 0 35%",
+                width: mobile ? "50%" : "30%",
               }}
-              data-tooltip={"Update"}
-              onClick={() => handleSubmit}
+              data-tooltip={"Update Dynamic Avatar Record"}
+              onClick={handleSubmit}
               disabled={!isValidValuesAndTicks()}
             >
               <div className="flex-row">
@@ -507,7 +550,7 @@ const StyledModal = styled.div`
 
 const StyledModalOverlay = styled.div`
   position: absolute;
-  top: -60px;
+  top: ${isMobile ? "0" : "-60px"};
   left: 0;
   width: 100%;
   height: 100%;
